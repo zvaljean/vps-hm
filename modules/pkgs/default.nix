@@ -28,6 +28,9 @@
       tree
       fd
       curl
+      caddy
+      acme-sh
+      xray
     ;
   };
 
