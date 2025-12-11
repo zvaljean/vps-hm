@@ -1,0 +1,18 @@
+missingKey: error
+inputFiles:
+  - tmpl/flake.nix
+outputFiles:
+  - flake.nix
+leftDelim: '<<'
+rightDelim: '>>'
+  
+# context:
+# data:
+#   url: ./data.toml
+# datasources:
+#   data:
+#     url: ./data.toml
+
+context:
+  .:
+    url: ./tmpl/data.toml
