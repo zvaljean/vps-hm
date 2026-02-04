@@ -31,6 +31,7 @@
       caddy
       acme-sh
       xray
+      gemini-cli
     ;
   };
 
