@@ -70,8 +70,8 @@
     shellAliases = {
 
       mux = "tmuxinator";
-
-      hm = "home-manager ";
+      hm = "home-manager";
+      cm = "chezmoi";
 
       ld = "eza -ld */ --no-quotes --time-style long-iso";
       lla = "eza -lah --no-quotes --time-style long-iso";
