@@ -32,6 +32,7 @@
       acme-sh
       xray
       gemini-cli
+      chezmoi
     ;
   };
 
