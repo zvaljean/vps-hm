@@ -37,10 +37,11 @@
      set fish_greeting 
      ${pkgs.zoxide}/bin/zoxide init fish | source
 
-     set GOROOT /opt/tools/go/
-     set GOPATH /opt/tools/repo/go
-     set PATH ~/.local/bin $GOROOT/bin $PATH
-     export GOROOT GOPATH PATH
+     # -g global, -x  xexport 
+     set -gx GOROOT /opt/tools/go/
+     set -gx GOPATH /opt/tools/repo/go
+     set -gx PATH ~/.local/bin $GOROOT/bin $PATH
+     # export GOROOT GOPATH PATH
     '';
 
     plugins = [
