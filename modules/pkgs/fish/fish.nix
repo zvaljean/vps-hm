@@ -40,7 +40,11 @@
      # -g global, -x  xexport 
      set -gx GOROOT /opt/tools/go/
      set -gx GOPATH /opt/tools/repo/go
-     set -gx PATH ~/.local/bin $GOROOT/bin $PATH
+
+     fish_add_path ~/.local/bin
+     fish_add_path $GOROOT/bin
+     fish_add_path $GOPATH/bin
+
      # export GOROOT GOPATH PATH
     '';
 
