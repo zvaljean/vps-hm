@@ -40,7 +40,7 @@
      set GOROOT /opt/tools/go/
      set GOPATH /opt/tools/repo/go
      set PATH ~/.local/bin $GOROOT/bin $PATH
-     export GOROOT GOPATH 
+     export GOROOT GOPATH PATH
     '';
 
     plugins = [
