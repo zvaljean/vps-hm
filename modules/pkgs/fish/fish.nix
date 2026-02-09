@@ -38,7 +38,7 @@
      ${pkgs.zoxide}/bin/zoxide init fish | source
 
      set GOROOT /opt/tools/go/
-     set GOPATH /opt/repo/golang
+     set GOPATH /opt/tools/repo/go
      set PATH ~/.local/bin $GOROOT/bin $PATH
      export GOROOT GOPATH 
     '';
