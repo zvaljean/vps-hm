@@ -41,6 +41,16 @@
      set GOPATH /opt/repo/golang
      set PATH ~/.local/bin $GOROOT/bin $PATH
      export GOROOT GOPATH 
+
+     # 自动更新 SSH_AUTH_SOCK 软链接
+     if set -q SSH_AUTH_SOCK; and test "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock"
+         ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
+     end
+
+     # 强制将变量指向固定软链接
+     set -gx SSH_AUTH_SOCK "$HOME/.ssh/ssh_auth_sock"
+
+
     '';
 
     plugins = [
