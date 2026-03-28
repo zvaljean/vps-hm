@@ -28,6 +28,14 @@
       tree
       fd
       curl
+      caddy
+      acme-sh
+      xray
+      gemini-cli
+      chezmoi
+      tmuxp
+      ruby_3_5
+      gemini-cli-bin
     ;
   };
 

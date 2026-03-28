@@ -1,4 +1,5 @@
 missingKey: error
+
 inputFiles:
   - tmpl/flake.nix
 outputFiles:

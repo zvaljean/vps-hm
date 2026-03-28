@@ -37,10 +37,21 @@
      set fish_greeting 
      ${pkgs.zoxide}/bin/zoxide init fish | source
 
-     set GOROOT /opt/tools/go/
-     set GOPATH /opt/repo/golang
-     set PATH ~/.local/bin $GOROOT/bin $PATH
-     export GOROOT GOPATH 
+
+     # -g global, -x  xexport 
+     set -gx GOROOT /opt/tools/go/
+     set -gx GOPATH /opt/tools/repo/go
+
+     fish_add_path ~/.local/bin
+     fish_add_path $GOROOT/bin
+     fish_add_path $GOPATH/bin
+
+     if set -q SSH_AUTH_SOCK; and test "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock"
+         ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
+     end
+
+     set -gx SSH_AUTH_SOCK "$HOME/.ssh/ssh_auth_sock"
+
     '';
 
     plugins = [
@@ -70,9 +81,10 @@
     shellAliases = {
 
       mux = "tmuxinator";
+      hm = "home-manager";
+      cm = "chezmoi";
 
-      hm = "home-manager ";
-
+      l = "ls -lhF --group-directories-first"
       ld = "eza -ld */ --no-quotes --time-style long-iso";
       lla = "eza -lah --no-quotes --time-style long-iso";
       ll = "eza -lh --no-quotes --time-style long-iso";
