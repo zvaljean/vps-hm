@@ -37,10 +37,15 @@
      set fish_greeting 
      ${pkgs.zoxide}/bin/zoxide init fish | source
 
-     set GOROOT /opt/tools/go/
-     set GOPATH /opt/repo/golang
-     set PATH ~/.local/bin $GOROOT/bin $PATH
-     export GOROOT GOPATH 
+     # -g global, -x  xexport 
+     set -gx GOROOT /opt/tools/go/
+     set -gx GOPATH /opt/tools/repo/go
+
+     fish_add_path ~/.local/bin
+     fish_add_path $GOROOT/bin
+     fish_add_path $GOPATH/bin
+
+     # export GOROOT GOPATH PATH
     '';
 
     plugins = [
@@ -70,8 +75,8 @@
     shellAliases = {
 
       mux = "tmuxinator";
-
-      hm = "home-manager ";
+      hm = "home-manager";
+      cm = "chezmoi";
 
       l = "ls -lhF --group-directories-first"
       ld = "eza -ld */ --no-quotes --time-style long-iso";
