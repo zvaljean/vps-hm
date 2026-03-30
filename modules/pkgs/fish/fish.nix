@@ -39,7 +39,7 @@
 
 
      # -g global, -x  xexport 
-     set -gx GOROOT /opt/tools/go/
+     set -gx GOROOT /opt/tools/go
      set -gx GOPATH /opt/tools/repo/go
 
      fish_add_path ~/.local/bin
