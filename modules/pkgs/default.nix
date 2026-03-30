@@ -36,6 +36,7 @@
       tmuxp
       ruby_3_5
       gemini-cli-bin
+      ranger
     ;
   };
 
