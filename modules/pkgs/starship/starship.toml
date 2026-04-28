@@ -30,4 +30,4 @@ format = " [ $branch](bold fg:#8be9fd)"
 [hostname]
 format = "[$hostname](fg:#bd93f9) "  
 ssh_only = true  
-trim_at = ''
+trim_at = '.'
