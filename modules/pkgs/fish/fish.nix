@@ -76,6 +76,10 @@
       #       sha256 = "0dbnir6jbwjpjalz14snzd3cgdysgcs3raznsijd6savad3qhijc";
       #     };
       #   }
+        {
+          name = "plugin-git";
+          src = pkgs.fishPlugins.plugin-git.src;
+        }
     ];
 
     shellAliases = {
