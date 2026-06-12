@@ -1,5 +1,4 @@
 { config, pkgs, ... }:
-
 {
 
   home.shell.enableFishIntegration = true;
@@ -51,6 +50,19 @@
      end
 
      set -gx SSH_AUTH_SOCK "$HOME/.ssh/ssh_auth_sock"
+     # GPG Agent 动态软链接接管
+     if test -S "$HOME/.gnupg/S.gpg-agent"
+         # 1. 杀死系统可能自动唤醒的空壳 Agent
+         gpgconf --kill gpg-agent 2>/dev/null
+
+         # 2. 动态获取当前系统 GPG 真正期待的套接字路径 (自动包含正确的 UID)
+         set REAL_SOCKET (gpgconf --list-dirs agent-socket)
+
+         # 3. 确保目录存在，并强制将默认路径软链接到 SSH 建立的隧道上
+         mkdir -p (dirname "$REAL_SOCKET")
+         rm -f "$REAL_SOCKET"
+         ln -sf "$HOME/.gnupg/S.gpg-agent" "$REAL_SOCKET"
+     end
 
     '';
 
