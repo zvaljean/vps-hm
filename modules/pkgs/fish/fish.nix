@@ -10,11 +10,11 @@
       fish
       grc
       zoxide
-      tmuxinator
+      # tmuxinator
     ;
   };
 
-  xdg.configFile."fish/completions/tmuxinator.fish".source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
+  # xdg.configFile."fish/completions/tmuxinator.fish".source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
   xdg.configFile."fish/completions/nix.fish".source = "${pkgs.nix}/share/fish/vendor_completions.d/nix.fish";
 
   programs.fish = {

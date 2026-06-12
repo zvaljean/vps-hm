@@ -19,7 +19,7 @@
       delta
       yazi
       tmux
-      tmuxinator
+      # tmuxinator
       emacs
       rsync
       vim
