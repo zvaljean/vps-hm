@@ -35,8 +35,9 @@
       chezmoi
       tmuxp
       ruby_3_5
-      gemini-cli-bin
       ranger
+      nerd-fonts.jetbrains-mono
+      opencode
     ;
   };
 

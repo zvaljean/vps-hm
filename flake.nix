@@ -17,16 +17,15 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in
     {
+
       homeConfigurations."data" = home-manager.lib.homeManagerConfiguration {
         inherit pkgs;
-
-
 
         # Specify your home configuration modules here, for example,
         # the path to your home.nix.
         modules = [
-            # Optionally use extraSpecialArgs
-            # to pass through arguments to home.nix
+        # Optionally use extraSpecialArgs
+        # to pass through arguments to home.nix
           {
             home.username = "data";
             home.homeDirectory = "/home/data";
