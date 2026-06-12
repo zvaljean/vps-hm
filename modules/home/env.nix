@@ -1,5 +1,4 @@
 { config, pkgs, ... }:
-
 {
   # packages 可以执行脚本
   # home.packages =  [ (pkgs.writeShellScriptBin "my-hello" ''
@@ -22,6 +21,7 @@
 
   home.sessionVariables = {
     # EDITOR = "emacs";
+    TERM = "xterm-256color";
   };
 
 }
