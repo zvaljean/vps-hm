@@ -37,6 +37,7 @@
       ruby_3_5
       ranger
       opencode
+      fontconfig
     ;
     # inherit (pkgs) 只用于一级属性, ++ 拼接列表，单独追加 pkgs.nerd-fonts.jetbrains-mono
   } ++ [ pkgs.nerd-fonts.jetbrains-mono ];
