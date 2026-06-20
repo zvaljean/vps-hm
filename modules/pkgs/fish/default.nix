@@ -1,6 +1,5 @@
 { config, pkgs, lib, ... }:
 {
-
   xdg.configFile."fish/completions/nix.fish".source = "${pkgs.nix}/share/fish/vendor_completions.d/nix.fish";
   xdg.configFile."fish/completions/tmuxinator.fish" = 
      lib.mkIf config.programs.tmux.tmuxinator.enable {
@@ -21,7 +20,6 @@
 
       mux = "tmuxinator";
       hm = "home-manager";
-      cm = "chezmoi";
 
       l = "ls -lhF --group-directories-first";
       ld = "eza -ld */ --no-quotes --time-style long-iso";
