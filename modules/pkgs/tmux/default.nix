@@ -10,9 +10,7 @@ in
 {
   home.packages = with pkgs; [
     tmux
-    # TPM 某些插件（如 tmux-yank）可能依赖系统剪贴板工具，建议一并装上
-    # xclip # Linux X11 环境
-    # wl-clipboard # 如果你使用的是 Wayland 环境
+    tmuxinator
   ];
 
   xdg.configFile = {
