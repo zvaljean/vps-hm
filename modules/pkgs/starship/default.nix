@@ -1,7 +1,5 @@
 { config, pkgs, ... }:
-
 {
-
   home.packages = builtins.attrValues {
     inherit (pkgs)
       starship
@@ -13,7 +11,7 @@
 	#           to find the file       Where the file is located relative to this .nix file
 	#                    |                             |
 	#                    V                             V
-	xdg.configFile."starship.toml".source = ./starship.toml;
+  xdg.configFile."starship.toml".source = ./starship.toml;
 
   programs.starship = {
     enable = true;
