@@ -1,3 +1,4 @@
+:mkdirp yes
 { config, pkgs, ... }:
 {
   imports = [
