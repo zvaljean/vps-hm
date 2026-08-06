@@ -1,4 +1,3 @@
-# -*- eval: (add-hook 'after-save-hook #'org-babel-tangle); -*-
 #+title: Nix Config
 ** flake nix
 #+begin_src nix :tangle (concat hm-dir "flake.nix") :mkdirp yes
@@ -143,6 +142,7 @@ in
           opencode
           fontconfig
           gnumake
+          devenv
         ;
         # inherit (pkgs) 只用于一级属性, ++ 拼接列表，单独追加 pkgs.nerd-fonts.jetbrains-mono
       } ++ [ pkgs.nerd-fonts.jetbrains-mono ];
