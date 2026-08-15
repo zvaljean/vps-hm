@@ -108,11 +108,11 @@
 
 
     functions = {
-      # __z = ''
-      #   function __z  
-      #   __zoxide_z "$argv"
-      #   end
-      # '';
+       zv-tmux-kill-other = ''
+         function zv-tmux-kill-other  
+          tmux list-windows  -a  -F '#{session_name}' | rg -v 'local' | sort -u | xargs -I xx tmux kill-session -t xx
+         end
+       '';
     };
   };
 }

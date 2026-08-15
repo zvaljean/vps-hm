@@ -118,31 +118,33 @@ in
           jq 
           eza 
           fzf 
-          just 
+          #just 
           neovim
           bat
-          delta
-          yazi
+          #delta
           tmux
           emacs
           rsync
-          vim
+          vim-full
           #neofetch
           fastfetch
           git
           tree
           fd
           curl
-          caddy
-          acme-sh
-          xray
+          #caddy
+          #acme-sh
+          #xray
           chezmoi
           ruby_3_5
+          #yazi
           ranger
-          opencode
           fontconfig
           gnumake
           devenv
+          nmap
+          iproute2
+          netcat-openbsd
         ;
         # inherit (pkgs) 只用于一级属性, ++ 拼接列表，单独追加 pkgs.nerd-fonts.jetbrains-mono
       } ++ [ pkgs.nerd-fonts.jetbrains-mono ];
@@ -261,11 +263,11 @@ in
 
 
       functions = {
-        # __z = ''
-        #   function __z  
-        #   __zoxide_z "$argv"
-        #   end
-        # '';
+         zv-tmux-kill-other = ''
+           function zv-tmux-kill-other  
+            tmux list-windows  -a  -F '#{session_name}' | rg -v 'local' | sort -u | xargs -I xx tmux kill-session -t xx
+           end
+         '';
       };
     };
   }
