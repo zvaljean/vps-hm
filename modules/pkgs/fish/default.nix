@@ -18,6 +18,13 @@
       hm-pkg = "home-manager packages";
     };
 
+    # 1. 顶层配置：确保 Ansible 和管道脚本也能加载 Nix 路径
+    shellInit = ''
+        if test -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
+        . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
+        end
+    '';
+
     shellAliases = {
 
       mux = "tmuxinator";
@@ -50,10 +57,6 @@
     interactiveShellInit = ''
 
      set -g fish_greeting 
-
-     if test -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish
-        source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish
-     end
 
 
      if set -q SSH_AUTH_SOCK; and test "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock"
