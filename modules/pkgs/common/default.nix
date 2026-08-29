@@ -2,31 +2,41 @@
   {
     home.packages = builtins.attrValues {
       inherit (pkgs)
+        git
+        tree
+        #curl
+        curlFull
+        rsync
+        ranger
+        socat
+        net-tools
+        acl
+
+        fish
+
+        inetutils
+        wget
+
+        fastfetch
+        fd
         ripgrep 
         jq 
         eza 
         fzf 
-        #just 
-        neovim
         bat
+        #just 
+        #neovim
         #delta
         tmux
         emacs
-        rsync
         vim-full
         #neofetch
-        fastfetch
-        git
-        tree
-        fd
-        curl
         #caddy
         #acme-sh
         #xray
         chezmoi
-        ruby_3_5
+        #ruby_3_5
         #yazi
-        ranger
         fontconfig
         gnumake
         devenv
