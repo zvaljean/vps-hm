@@ -11,12 +11,8 @@
         socat
         net-tools
         acl
-
-        fish
-
         inetutils
         wget
-
         fastfetch
         fd
         ripgrep 
@@ -24,19 +20,11 @@
         eza 
         fzf 
         bat
-        #just 
-        #neovim
-        #delta
         tmux
         emacs
         vim-full
-        #neofetch
-        #caddy
-        #acme-sh
-        #xray
         chezmoi
-        #ruby_3_5
-        #yazi
+        gnupg
         fontconfig
         gnumake
         devenv
