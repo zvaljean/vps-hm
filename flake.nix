@@ -14,6 +14,7 @@
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
       username = "data";
+      homeDir = "/home/data";
     in
     {
       # add formatter
@@ -24,7 +25,7 @@
         modules = [
           {
             home.username = "${username}";
-            home.homeDirectory = "/home/${username}";
+            home.homeDirectory = "${homeDir}";
             home.stateVersion = "26.05"; 
             home.shell.enableFishIntegration = true;
             programs.home-manager.enable = true;
