@@ -201,6 +201,8 @@ in
         lls = "eza -lh -s size --no-quotes --time-style long-iso";
         llt = "eza -lh -s time --no-quotes --time-style long-iso";
         lltr = "eza -lhr -s time --no-quotes --time-style long-iso";
+        # 3proxy log
+        t3pl = "tail -f /var/log/3proxy/3proxy-$(date +%y%m%d).log";
         
       };
 
