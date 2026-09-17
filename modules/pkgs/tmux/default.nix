@@ -12,7 +12,7 @@ in
   home.packages = builtins.attrValues {
       inherit (pkgs)
       tmux
-      tmuxinator
+      tmuxinator;
   };
 
   xdg.configFile = {
