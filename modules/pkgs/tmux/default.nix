@@ -13,7 +13,7 @@ in
       inherit (pkgs)
       tmux
       tmuxinator
-  }
+  };
 
   xdg.configFile = {
     "tmux/tmux.conf".source = "${ohMyTmuxSrc}/.tmux.conf";
