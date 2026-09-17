@@ -8,10 +8,12 @@ let
   };
 in
 {
-  home.packages = with pkgs; [
-    tmux
-    tmuxinator
-  ];
+
+  home.packages = builtins.attrValues {
+      inherit (pkgs)
+      tmux
+      tmuxinator
+  }
 
   xdg.configFile = {
     "tmux/tmux.conf".source = "${ohMyTmuxSrc}/.tmux.conf";

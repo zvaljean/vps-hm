@@ -27,8 +27,8 @@
           inherit pkgs;
           modules = [
             {
-              home.username = "${username}";
-              home.homeDirectory = "${homeDir}";
+              home.username = username;
+              home.homeDirectory = homeDir;
               home.stateVersion = "26.05"; 
               home.shell.enableFishIntegration = true;
               programs.home-manager.enable = true;
@@ -364,10 +364,12 @@ in
     };
   in
   {
-    home.packages = with pkgs; [
-      tmux
-      tmuxinator
-    ];
+
+    home.packages = builtins.attrValues {
+        inherit (pkgs)
+        tmux
+        tmuxinator
+    }
 
     xdg.configFile = {
       "tmux/tmux.conf".source = "${ohMyTmuxSrc}/.tmux.conf";

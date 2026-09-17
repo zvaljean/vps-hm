@@ -24,8 +24,8 @@
         inherit pkgs;
         modules = [
           {
-            home.username = "${username}";
-            home.homeDirectory = "${homeDir}";
+            home.username = username;
+            home.homeDirectory = homeDir;
             home.stateVersion = "26.05"; 
             home.shell.enableFishIntegration = true;
             programs.home-manager.enable = true;
