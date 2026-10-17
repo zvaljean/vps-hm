@@ -18,7 +18,7 @@ in {
       type = lib.types.lines;
       default = ''
         bindAddr = "${cfg.serverAddr}"
-        bindPort = ${cfg.serverAddr}
+        bindPort = ${cfg.serverPort}
 
         [auth]
         method = "token"
@@ -44,6 +44,29 @@ in {
         Home Manager only references this file and does not create or manage it.
       '';
     };
+
+
+    logFile = lib.mkOption {
+      type = lib.types.str;
+      default = "/var/log/frps.log";
+      example = "/var/log/frps.log";
+      description = '' log files '';
+    };
+    serverAddr = lib.mkOption {
+      type = lib.types.str;
+      default = "0.0.0.0";
+      example = "0.0.0.0";
+      description = '' server ip '';
+    };
+
+    serverPort = lib.mkOption {
+      type = lib.types.int;
+      default = 7000;
+      example = 7000;
+      description = '' server port'';
+    };
+    
+
   };
 
   config = lib.mkIf cfg.enable {
