@@ -31,8 +31,9 @@
             programs.home-manager.enable = true;
           }
 
-          ./modules/home
           ./modules/pkgs
+          ./modules/home
+          ./modules/home/trigger.nix
         ];
 
       };

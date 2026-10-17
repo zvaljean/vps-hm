@@ -153,7 +153,6 @@ in
           nmap
           iproute2
           netcat-openbsd
-          frp
         ;
         # inherit (pkgs) 只用于一级属性, ++ 拼接列表，单独追加 pkgs.nerd-fonts.jetbrains-mono
       } ++ [ pkgs.nerd-fonts.jetbrains-mono ];
@@ -387,6 +386,94 @@ in
     programs.zoxide = {
         enable = true;
         enableFishIntegration = true;
+    };
+  }
+#+end_src
+**** frps
+#+begin_src nix :tangle (concat hm-pkgs "frps/default.nix") :mkdirp yes
+  {
+    config,
+    lib,
+    pkgs,
+    ...
+  }: let
+    cfg = config.services.frps;
+    configDir = "${config.xdg.configHome}/frp";
+    configFile = "${configDir}/frps.toml";
+  in {
+
+    options.services.frps = {
+      enable = lib.mkEnableOption "the frp server (frps) user service";
+
+      package = lib.mkPackageOption pkgs "frp" {};
+
+      configText = lib.mkOption {
+        type = lib.types.lines;
+        default = ''
+          bindAddr = "{{ .Envs.FRP_SERVER_INTRANET_ADDR }}"
+          bindPort = {{ .Envs.FRP_SERVER_PORT }}
+
+          [auth]
+          method = "token"
+          token = "{{ .Envs.FRP_TOKEN }}"
+
+          [log]
+          to = "console"
+          level = "info"
+          maxDays = 3
+        '';
+        description = ''
+          Contents of the frps TOML configuration. Environment variables can be
+          referenced using frp's {{ .Envs.NAME }} template syntax.
+        '';
+      };
+
+      environmentFile = lib.mkOption {
+        type = lib.types.str;
+        default = "/etc/frp/token";
+        example = "/run/secrets/frps-env";
+        description = ''
+          Path to an EnvironmentFile that already exists on the target machine.
+          Home Manager only references this file and does not create or manage it.
+        '';
+      };
+
+      serviceEnvironment = lib.mkOption {
+        type = lib.types.attrsOf (lib.types.oneOf [lib.types.str lib.types.int]);
+        default = {
+          FRP_SERVER_INTRANET_ADDR = "0.0.0.0";
+          FRP_SERVER_PORT = 7000;
+        };
+        description = ''
+          Non-sensitive variables written directly to the systemd service with
+          Environment=. Do not duplicate names from services.frps.environment.
+        '';
+      };
+    };
+
+    config = lib.mkIf cfg.enable {
+      home.packages = [cfg.package];
+
+      xdg.configFile."frp/frps.toml".text = cfg.configText;
+
+      systemd.user.services.frps = {
+        Unit = {
+          Description = "frp server";
+          Wants = ["network-online.target"];
+          After = ["network-online.target"];
+        };
+
+        Service = {
+          Type = "simple";
+          EnvironmentFile = cfg.environmentFile;
+          Environment = lib.mapAttrsToList (name: value: "${name}=${toString value}") cfg.serviceEnvironment;
+          ExecStart = "${lib.getExe' cfg.package "frps"} -c ${configFile}";
+          Restart = "on-failure";
+          RestartSec = 5;
+        };
+
+        Install.WantedBy = ["default.target"];
+      };
     };
   }
 #+end_src
