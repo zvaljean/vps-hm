@@ -2,7 +2,7 @@
 {
   _class = "homeManager";
   programs.zoxide = {
-      enable = true;
-      enableFishIntegration = true;
+    enable = true;
+    enableFishIntegration = true;
   };
 }

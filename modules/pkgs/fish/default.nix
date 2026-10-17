@@ -4,9 +4,9 @@
   xdg.configFile."fish/completions/nix.fish".source = "${pkgs.nix}/share/fish/vendor_completions.d/nix.fish";
   # 2. 加入判断逻辑：如果 tmuxinator 启用了，才生成这个配置文件
   xdg.configFile."fish/completions/tmuxinator.fish" = 
-     lib.mkIf config.programs.tmux.tmuxinator.enable {
-       source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
-     };
+    lib.mkIf config.programs.tmux.tmuxinator.enable {
+      source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
+    };
 
   programs.fish = {
     enable = true;
@@ -44,7 +44,7 @@
       
     };
 
-     loginShellInit = ''
+    loginShellInit = ''
 
      # -g global, -x  xexport 
      set -gx GOROOT /opt/tools/go
@@ -105,15 +105,15 @@
       #       sha256 = "0dbnir6jbwjpjalz14snzd3cgdysgcs3raznsijd6savad3qhijc";
       #     };
       #   }
-        {
-          name = "plugin-git";
-          src = pkgs.fishPlugins.plugin-git.src;
-        }
+      {
+        name = "plugin-git";
+        src = pkgs.fishPlugins.plugin-git.src;
+      }
     ];
 
 
     functions = {
-       zv-tmux-kill-other = ''
+      zv-tmux-kill-other = ''
          function zv-tmux-kill-other  
           tmux list-windows  -a  -F '#{session_name}' | rg -v 'local' | sort -u | xargs -I xx tmux kill-session -t xx
          end

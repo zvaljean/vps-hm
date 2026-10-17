@@ -7,7 +7,7 @@
       url = "github:nix-community/home-manager/release-26.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
- };
+  };
 
   outputs = { nixpkgs, home-manager, ... }:
     let
@@ -16,26 +16,26 @@
       username = "data";
       homeDir = "/home/data";
     in
-    {
-      # add formatter
-      formatter.${system} = pkgs.alejandra;
+      {
+        # add formatter
+        formatter.${system} = pkgs.alejandra;
 
-      homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-        modules = [
-          {
-            home.username = username;
-            home.homeDirectory = homeDir;
-            home.stateVersion = "26.05"; 
-            home.shell.enableFishIntegration = true;
-            programs.home-manager.enable = true;
-          }
+        homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
+          modules = [
+            {
+              home.username = username;
+              home.homeDirectory = homeDir;
+              home.stateVersion = "26.05"; 
+              home.shell.enableFishIntegration = true;
+              programs.home-manager.enable = true;
+            }
 
-          ./modules/pkgs
-          ./modules/home
-          ./modules/home/trigger.nix
-        ];
+            ./modules/home
+            ./modules/pkgs
+            ./modules/home/trigger.nix
+          ];
 
+        };
       };
-    };
 }

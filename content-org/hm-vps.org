@@ -10,7 +10,7 @@
         url = "github:nix-community/home-manager/release-26.05";
         inputs.nixpkgs.follows = "nixpkgs";
       };
-   };
+    };
 
     outputs = { nixpkgs, home-manager, ... }:
       let
@@ -19,27 +19,28 @@
         username = "data";
         homeDir = "/home/data";
       in
-      {
-        # add formatter
-        formatter.${system} = pkgs.alejandra;
+        {
+          # add formatter
+          formatter.${system} = pkgs.alejandra;
 
-        homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
-          inherit pkgs;
-          modules = [
-            {
-              home.username = username;
-              home.homeDirectory = homeDir;
-              home.stateVersion = "26.05"; 
-              home.shell.enableFishIntegration = true;
-              programs.home-manager.enable = true;
-            }
+          homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
+            inherit pkgs;
+            modules = [
+              {
+                home.username = username;
+                home.homeDirectory = homeDir;
+                home.stateVersion = "26.05"; 
+                home.shell.enableFishIntegration = true;
+                programs.home-manager.enable = true;
+              }
 
-            ./modules/home
-            ./modules/pkgs
-          ];
+              ./modules/home
+              ./modules/pkgs
+              ./modules/home/trigger.nix
+            ];
 
+          };
         };
-      };
   }
 
 #+end_src
@@ -97,65 +98,81 @@
   }
 #+end_src
 
+**** trigger
+#+begin_src nix :tangle (concat hm-home "trigger.nix") :mkdirp yes
+  { config, pkgs, ... }:
+  {
+    services.frps = {
+      enable = true;
+
+      tokenFile = "/etc/frp/token";
+      logFile = "/var/log/frps.log";
+      serverAddr = "0.0.0.0";
+      serverPort = 7000;
+    };
+
+  }
+#+end_src
+
 *** pkgs
 **** default
 #+begin_src nix :tangle (concat hm-pkgs "default.nix") :mkdirp yes
-# https://nix-community.github.io/home-manager/index.xhtml#sec-module-auto-importing
-{ lib, ... }:
-let
-  dir = builtins.readDir ./.;
-  autoImportFilter = name: type:
-    let
-      isValidFile = type == "regular" && name != "default.nix" && lib.strings.hasSuffix ".nix" name;
-      isValidDir = type == "directory";
-      isNotIgnored = !(lib.strings.hasPrefix "_" name);
-    in
-      isNotIgnored && (isValidFile || isValidDir);
+  # https://nix-community.github.io/home-manager/index.xhtml#sec-module-auto-importing
+  { lib, ... }:
+  let
+    dir = builtins.readDir ./.;
+    autoImportFilter = name: type:
+      let
+        isValidFile = type == "regular" && name != "default.nix" && lib.strings.hasSuffix ".nix" name;
+        isValidDir = type == "directory";
+        isNotIgnored = !(lib.strings.hasPrefix "_" name);
+      in
+        isNotIgnored && (isValidFile || isValidDir);
 
-  validModules = builtins.filter (name: autoImportFilter name dir.${name}) (builtins.attrNames dir);
-in
-{
-  imports = map (name: ./${name}) validModules;
-}
+    validModules = builtins.filter (name: autoImportFilter name dir.${name}) (builtins.attrNames dir);
+  in
+  {
+    imports = map (name: ./${name}) validModules;
+  }
 #+end_src
 **** common tools
 #+begin_src nix :tangle (concat hm-pkgs "common/default.nix") :mkdirp yes
-    { config, pkgs, ... }:
-    {
-      home.packages = builtins.attrValues {
-        inherit (pkgs)
-          git
-          tree
-          #curl
-          curlFull
-          rsync
-          ranger
-          socat
-          net-tools
-          acl
-          inetutils
-          wget
-          fastfetch
-          fd
-          ripgrep 
-          jq 
-          eza 
-          fzf 
-          bat
-          tmux
-          emacs
-          vim-full
-          chezmoi
-          gnupg
-          fontconfig
-          gnumake
-          devenv
-          nmap
-          iproute2
-          netcat-openbsd
-        ;
-        # inherit (pkgs) 只用于一级属性, ++ 拼接列表，单独追加 pkgs.nerd-fonts.jetbrains-mono
-      } ++ [ pkgs.nerd-fonts.jetbrains-mono ];
+  { config, pkgs, ... }:
+  {
+    home.packages = builtins.attrValues {
+      inherit (pkgs)
+        git
+        tree
+        #curl
+        curlFull
+        rsync
+        ranger
+        socat
+        net-tools
+        acl
+        inetutils
+        wget
+        fastfetch
+        fd
+        ripgrep 
+        jq 
+        eza 
+        fzf 
+        bat
+        tmux
+        emacs
+        vim-full
+        chezmoi
+        gnupg
+        fontconfig
+        gnumake
+        devenv
+        nmap
+        iproute2
+        netcat-openbsd
+      ;
+      # inherit (pkgs) 只用于一级属性, ++ 拼接列表，单独追加 pkgs.nerd-fonts.jetbrains-mono
+    } ++ [ pkgs.nerd-fonts.jetbrains-mono ];
   }
 #+end_src
 **** fish
@@ -167,9 +184,9 @@ in
     xdg.configFile."fish/completions/nix.fish".source = "${pkgs.nix}/share/fish/vendor_completions.d/nix.fish";
     # 2. 加入判断逻辑：如果 tmuxinator 启用了，才生成这个配置文件
     xdg.configFile."fish/completions/tmuxinator.fish" = 
-       lib.mkIf config.programs.tmux.tmuxinator.enable {
-         source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
-       };
+      lib.mkIf config.programs.tmux.tmuxinator.enable {
+        source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
+      };
 
     programs.fish = {
       enable = true;
@@ -207,7 +224,7 @@ in
         
       };
 
-       loginShellInit = ''
+      loginShellInit = ''
 
        # -g global, -x  xexport 
        set -gx GOROOT /opt/tools/go
@@ -268,15 +285,15 @@ in
         #       sha256 = "0dbnir6jbwjpjalz14snzd3cgdysgcs3raznsijd6savad3qhijc";
         #     };
         #   }
-          {
-            name = "plugin-git";
-            src = pkgs.fishPlugins.plugin-git.src;
-          }
+        {
+          name = "plugin-git";
+          src = pkgs.fishPlugins.plugin-git.src;
+        }
       ];
 
 
       functions = {
-         zv-tmux-kill-other = ''
+        zv-tmux-kill-other = ''
            function zv-tmux-kill-other  
             tmux list-windows  -a  -F '#{session_name}' | rg -v 'local' | sort -u | xargs -I xx tmux kill-session -t xx
            end
@@ -289,72 +306,72 @@ in
 **** starship
 ***** default
 #+begin_src nix :tangle (concat hm-pkgs "starship/default.nix") :mkdirp yes
-{ config, pkgs, ... }:
-{
-  home.packages = builtins.attrValues {
-    inherit (pkgs)
-      starship
-    ;
-  };
+  { config, pkgs, ... }:
+  {
+    home.packages = builtins.attrValues {
+      inherit (pkgs)
+        starship
+      ;
+    };
 
-  # https://codeberg.org/justgivemeaname/.dotfiles/src/branch/main/home-manager/packages/starship/starship.nix
-  #      the standard path under ~/.config/ 
-	#           to find the file       Where the file is located relative to this .nix file
-	#                    |                             |
-	#                    V                             V
-  xdg.configFile."starship.toml".source = ./starship.toml;
+    # https://codeberg.org/justgivemeaname/.dotfiles/src/branch/main/home-manager/packages/starship/starship.nix
+    #      the standard path under ~/.config/ 
+  	#           to find the file       Where the file is located relative to this .nix file
+  	#                    |                             |
+  	#                    V                             V
+    xdg.configFile."starship.toml".source = ./starship.toml;
 
-  programs.starship = {
-    enable = true;
-    enableFishIntegration = true;
-  };
-}
+    programs.starship = {
+      enable = true;
+      enableFishIntegration = true;
+    };
+  }
 
 #+end_src
 
 ***** config
 #+begin_src nix :tangle (concat hm-pkgs "starship/starship.toml") :mkdirp yes
 
-    # Port of Oh My Zsh theme "avit" to Starship.
+  # Port of Oh My Zsh theme "avit" to Starship.
 
-    add_newline = false
+  add_newline = false
     format = """\
-      $hostname\
-      $directory\
-      $git_branch$git_commit$git_state$git_status\
-      $character\
-    """
+    $hostname\
+    $directory\
+    $git_branch$git_commit$git_state$git_status\
+    $character\
+  """
 
-    [character]
-    success_symbol = "[ ➤]($bold fg:#f8f8f2)"
-    error_symbol = "[ ➤]($bold fg:#fb4934)"
+      [character]
+      success_symbol = "[ ➤]($bold fg:#f8f8f2)"
+        error_symbol = "[ ➤]($bold fg:#fb4934)"
 
-    [directory]
-    disabled = false
-    format = "[ $path](bold fg:#ff79c6)"
-    truncate_to_repo = false
+          [directory]
+          disabled = false
+            format = "[ $path](bold fg:#ff79c6)"
+              truncate_to_repo = false
 
-    [git_status]
-    format = " ([$all_status$ahead_behind](bold fg:#8be9fd))"
-    staged = "• "
-    modified = "~ "
-    untracked = "+ "
-    deleted = "x "
+                [git_status]
+                format = " ([$all_status$ahead_behind](bold fg:#8be9fd))"
+                  staged = "• "
+                    modified = "~ "
+                      untracked = "+ "
+                        deleted = "x "
 
-    [git_branch]
-    format = " [ $branch](bold fg:#8be9fd)"
+                          [git_branch]
+                          format = " [ $branch](bold fg:#8be9fd)"
 
-    [hostname]
-    format = "[$hostname](fg:#bd93f9) "  
-    ssh_only = true  
-    trim_at = '.'
+                            [hostname]
+                            format = "[$hostname](fg:#bd93f9) "  
+                              ssh_only = true  
+                                trim_at = '.'
 
 #+end_src
 **** tmux
 ***** config
 - af33f07134b76134acca9d01eacbdecca9c9cda6
 #+begin_src nix :tangle (concat hm-pkgs "tmux/default.nix") :mkdirp yes
-   { config, pkgs, ... }:
+  { config, pkgs, ... }:
   let
     ohMyTmuxSrc = pkgs.fetchFromGitHub {
       owner = "gpakosz";
@@ -366,7 +383,7 @@ in
   {
 
     home.packages = builtins.attrValues {
-        inherit (pkgs)
+      inherit (pkgs)
         tmux
         tmuxinator;
     };
@@ -376,7 +393,7 @@ in
     };
   }
 
-  #+end_src
+#+end_src
 
 **** zoxide
 #+begin_src nix :tangle (concat hm-pkgs "zoxide/default.nix") :mkdirp yes
@@ -384,8 +401,8 @@ in
   {
     _class = "homeManager";
     programs.zoxide = {
-        enable = true;
-        enableFishIntegration = true;
+      enable = true;
+      enableFishIntegration = true;
     };
   }
 #+end_src
@@ -410,43 +427,31 @@ in
       configText = lib.mkOption {
         type = lib.types.lines;
         default = ''
-          bindAddr = "{{ .Envs.FRP_SERVER_INTRANET_ADDR }}"
-          bindPort = {{ .Envs.FRP_SERVER_PORT }}
+          bindAddr = "${cfg.serverAddr}"
+          bindPort = ${cfg.serverAddr}
 
           [auth]
           method = "token"
-          token = "{{ .Envs.FRP_TOKEN }}"
+          tokenSource.type = "file"
+          tokenSource.file.path = "${cfg.tokenFile}"
 
           [log]
-          to = "console"
+          to = "${cfg.logFile}"
           level = "info"
           maxDays = 3
         '';
         description = ''
-          Contents of the frps TOML configuration. Environment variables can be
-          referenced using frp's {{ .Envs.NAME }} template syntax.
+          Contents of the frps TOML configuration.
         '';
       };
 
-      environmentFile = lib.mkOption {
+      tokenFile = lib.mkOption {
         type = lib.types.str;
-        default = "/etc/frp/token";
-        example = "/run/secrets/frps-env";
+        default = "/etc/frp/server_token";
+        example = "/run/secrets/frps-token";
         description = ''
-          Path to an EnvironmentFile that already exists on the target machine.
+          Path to the token file that already exists on the target machine.
           Home Manager only references this file and does not create or manage it.
-        '';
-      };
-
-      serviceEnvironment = lib.mkOption {
-        type = lib.types.attrsOf (lib.types.oneOf [lib.types.str lib.types.int]);
-        default = {
-          FRP_SERVER_INTRANET_ADDR = "0.0.0.0";
-          FRP_SERVER_PORT = 7000;
-        };
-        description = ''
-          Non-sensitive variables written directly to the systemd service with
-          Environment=. Do not duplicate names from services.frps.environment.
         '';
       };
     };
@@ -465,8 +470,6 @@ in
 
         Service = {
           Type = "simple";
-          EnvironmentFile = cfg.environmentFile;
-          Environment = lib.mapAttrsToList (name: value: "${name}=${toString value}") cfg.serviceEnvironment;
           ExecStart = "${lib.getExe' cfg.package "frps"} -c ${configFile}";
           Restart = "on-failure";
           RestartSec = 5;

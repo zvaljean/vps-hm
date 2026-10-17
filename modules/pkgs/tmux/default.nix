@@ -10,7 +10,7 @@ in
 {
 
   home.packages = builtins.attrValues {
-      inherit (pkgs)
+    inherit (pkgs)
       tmux
       tmuxinator;
   };
