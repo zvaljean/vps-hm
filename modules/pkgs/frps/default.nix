@@ -18,7 +18,7 @@ in {
       type = lib.types.lines;
       default = ''
         bindAddr = "${cfg.serverAddr}"
-        bindPort = ${cfg.serverPort}
+        bindPort = ${toString cfg.serverPort}
 
         [auth]
         method = "token"
@@ -48,10 +48,11 @@ in {
 
     logFile = lib.mkOption {
       type = lib.types.str;
-      default = "/var/log/frps.log";
+      default = "console";
       example = "/var/log/frps.log";
       description = '' log files '';
     };
+
     serverAddr = lib.mkOption {
       type = lib.types.str;
       default = "0.0.0.0";

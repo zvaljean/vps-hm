@@ -105,14 +105,14 @@
     services.frps = {
       enable = true;
 
-      tokenFile = "/etc/frp/token";
-      logFile = "/var/log/frps.log";
+      tokenFile = "${config.xdg.configHome}/frp/token";
+      logFile = "console";
       serverAddr = "0.0.0.0";
-      serverPort = 7000;
+      serverPort = 10000;
     };
 
   }
-      #+end_src
+#+end_src
 
 *** pkgs
 **** default
@@ -170,6 +170,8 @@
         nmap
         iproute2
         netcat-openbsd
+
+        yt-dlp
       ;
       # inherit (pkgs) 只用于一级属性, ++ 拼接列表，单独追加 pkgs.nerd-fonts.jetbrains-mono
     } ++ [ pkgs.nerd-fonts.jetbrains-mono ];
@@ -428,7 +430,7 @@
         type = lib.types.lines;
         default = ''
           bindAddr = "${cfg.serverAddr}"
-          bindPort = ${cfg.serverPort}
+          bindPort = ${toString cfg.serverPort}
 
           [auth]
           method = "token"
@@ -458,10 +460,11 @@
 
       logFile = lib.mkOption {
         type = lib.types.str;
-        default = "/var/log/frps.log";
+        default = "console";
         example = "/var/log/frps.log";
         description = '' log files '';
       };
+
       serverAddr = lib.mkOption {
         type = lib.types.str;
         default = "0.0.0.0";

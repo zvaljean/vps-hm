@@ -3,10 +3,10 @@
   services.frps = {
     enable = true;
 
-    tokenFile = "/etc/frp/token";
-    logFile = "/var/log/frps.log";
+    tokenFile = "${config.xdg.configHome}/frp/token";
+    logFile = "console";
     serverAddr = "0.0.0.0";
-    serverPort = 7000;
+    serverPort = 10000;
   };
 
 }
