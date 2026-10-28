@@ -1,18 +1,22 @@
-{ config, pkgs, ... }:
-let
+{
+  config,
+  pkgs,
+  unstablePkgs,
+  ...
+}: let
   ohMyTmuxSrc = pkgs.fetchFromGitHub {
     owner = "gpakosz";
     repo = ".tmux";
-    rev = "af33f07134b76134acca9d01eacbdecca9c9cda6"; 
-    hash = "sha256-nXm664l84YSwZeRM4Hsweqgz+OlpyfwXcgEdyNGhaGA="; 
+    rev = "af33f07134b76134acca9d01eacbdecca9c9cda6";
+    hash = "sha256-nXm664l84YSwZeRM4Hsweqgz+OlpyfwXcgEdyNGhaGA=";
   };
-in
-{
-
+in {
   home.packages = builtins.attrValues {
-    inherit (pkgs)
+    inherit
+      (unstablePkgs)
+      tmuxinator
       tmux
-      tmuxinator;
+    ;
   };
 
   xdg.configFile = {

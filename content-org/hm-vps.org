@@ -6,16 +6,18 @@
     inputs = {
       # Specify the source of Home Manager and Nixpkgs.
       nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
+      nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
       home-manager = {
         url = "github:nix-community/home-manager/release-26.05";
         inputs.nixpkgs.follows = "nixpkgs";
       };
     };
 
-    outputs = { nixpkgs, home-manager, ... }:
+    outputs = inputs:
       let
         system = "x86_64-linux";
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = inputs.nixpkgs.legacyPackages.${system};
+        unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${system};
         username = "data";
         homeDir = "/home/data";
       in
@@ -23,8 +25,9 @@
           # add formatter
           formatter.${system} = pkgs.alejandra;
 
-          homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
+          homeConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
             inherit pkgs;
+            extraSpecialArgs = { inherit unstablePkgs; };
             modules = [
               {
                 home.username = username;
@@ -49,12 +52,12 @@
 *** home
 **** default
 #+begin_src nix :tangle (concat hm-home "default.nix") :mkdirp yes
-{ config, pkgs, ... }:
-{
-  imports = [
-    ./env.nix 
-  ];
-}
+  { config, pkgs, ... }:
+  {
+    imports = [
+      ./env.nix 
+    ];
+  }
 #+end_src
 
 **** env
@@ -159,7 +162,6 @@
         eza 
         fzf 
         bat
-        tmux
         emacs
         vim-full
         chezmoi
@@ -332,69 +334,70 @@
 #+end_src
 
 ***** config
-#+begin_src nix :tangle (concat hm-pkgs "starship/starship.toml") :mkdirp yes
+#+begin_src toml :tangle (concat hm-pkgs "starship/starship.toml") :mkdirp yes
+  	# Port of Oh My Zsh theme "avit" to Starship.
+  	add_newline = false
+  	format = """\
+  	$hostname\
+  	$directory\
+  	$git_branch$git_commit$git_state$git_status\
+  	$character\
+  	"""
 
-  # Port of Oh My Zsh theme "avit" to Starship.
+  	[character]
+  	success_symbol = "[ ➤]($bold fg:#f8f8f2)"
+  	error_symbol = "[ ➤]($bold fg:#fb4934)"
 
-  add_newline = false
-    format = """\
-    $hostname\
-    $directory\
-    $git_branch$git_commit$git_state$git_status\
-    $character\
-  """
+  	[directory]
+  	disabled = false
+  	format = "[ $path](bold fg:#ff79c6)"
+  	truncate_to_repo = false
 
-      [character]
-      success_symbol = "[ ➤]($bold fg:#f8f8f2)"
-        error_symbol = "[ ➤]($bold fg:#fb4934)"
+  	[git_status]
+  	format = " ([$all_status$ahead_behind](bold fg:#8be9fd))"
+  	staged = "• "
+  	modified = "~ "
+  	untracked = "+ "
+  	deleted = "x "
 
-          [directory]
-          disabled = false
-            format = "[ $path](bold fg:#ff79c6)"
-              truncate_to_repo = false
+  	[git_branch]
+  	format = " [ $branch](bold fg:#8be9fd)"
 
-                [git_status]
-                format = " ([$all_status$ahead_behind](bold fg:#8be9fd))"
-                  staged = "• "
-                    modified = "~ "
-                      untracked = "+ "
-                        deleted = "x "
-
-                          [git_branch]
-                          format = " [ $branch](bold fg:#8be9fd)"
-
-                            [hostname]
-                            format = "[$hostname](fg:#bd93f9) "  
-                              ssh_only = true  
-                                trim_at = '.'
+  	[hostname]
+  	format = "[$hostname](fg:#bd93f9) "  
+  	ssh_only = true  
+      trim_at = '.'
 
 #+end_src
 **** tmux
 ***** config
 - af33f07134b76134acca9d01eacbdecca9c9cda6
 #+begin_src nix :tangle (concat hm-pkgs "tmux/default.nix") :mkdirp yes
-  { config, pkgs, ... }:
-  let
+  {
+    config,
+    pkgs,
+    unstablePkgs,
+    ...
+  }: let
     ohMyTmuxSrc = pkgs.fetchFromGitHub {
       owner = "gpakosz";
       repo = ".tmux";
-      rev = "af33f07134b76134acca9d01eacbdecca9c9cda6"; 
-      hash = "sha256-nXm664l84YSwZeRM4Hsweqgz+OlpyfwXcgEdyNGhaGA="; 
+      rev = "af33f07134b76134acca9d01eacbdecca9c9cda6";
+      hash = "sha256-nXm664l84YSwZeRM4Hsweqgz+OlpyfwXcgEdyNGhaGA=";
     };
-  in
-  {
-
+  in {
     home.packages = builtins.attrValues {
-      inherit (pkgs)
+      inherit
+        (unstablePkgs)
+        tmuxinator
         tmux
-        tmuxinator;
+      ;
     };
 
     xdg.configFile = {
       "tmux/tmux.conf".source = "${ohMyTmuxSrc}/.tmux.conf";
     };
   }
-
 #+end_src
 
 **** zoxide

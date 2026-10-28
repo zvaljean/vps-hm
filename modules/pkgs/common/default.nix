@@ -20,7 +20,6 @@
       eza 
       fzf 
       bat
-      tmux
       emacs
       vim-full
       chezmoi
