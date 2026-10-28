@@ -12,11 +12,8 @@
   };
 in {
   home.packages = builtins.attrValues {
-    inherit
-      (unstablePkgs)
-      tmuxinator
-      tmux
-    ;
+    tmuxinator = unstablePkgs.tmuxinator;
+    tmux = pkgs.tmux;
   };
 
   xdg.configFile = {
