@@ -4,7 +4,7 @@
   ...
 }: {
   sops.enable = false;
-  emacs.enable = false;
+  emacs.enable = true;
   services.frps = {
     enable = false;
     tokenFile = "${config.xdg.configHome}/frp/token";

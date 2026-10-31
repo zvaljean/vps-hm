@@ -9,7 +9,7 @@
     pkgs.watchexec
   ];
 
-  scripts.sync-6c-hk = {
+  scripts.sync-6c-kr = {
     exec = ''
       watchexec -p -e nix -w ./ --shell=none -- \
         sync-6c-kr-on-change

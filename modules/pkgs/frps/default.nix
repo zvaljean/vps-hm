@@ -8,6 +8,7 @@
   configDir = "${config.xdg.configHome}/frp";
   configFile = "${configDir}/frps.toml";
 in {
+
   options.services.frps = {
     enable = lib.mkEnableOption "the frp server (frps) user service";
 
@@ -44,26 +45,29 @@ in {
       '';
     };
 
+
     logFile = lib.mkOption {
       type = lib.types.str;
       default = "console";
       example = "/var/log/frps.log";
-      description = ''log files '';
+      description = '' log files '';
     };
 
     serverAddr = lib.mkOption {
       type = lib.types.str;
       default = "0.0.0.0";
       example = "0.0.0.0";
-      description = ''server ip '';
+      description = '' server ip '';
     };
 
     serverPort = lib.mkOption {
       type = lib.types.int;
       default = 7000;
       example = 7000;
-      description = ''server port'';
+      description = '' server port'';
     };
+    
+
   };
 
   config = lib.mkIf cfg.enable {
