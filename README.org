@@ -1,0 +1,188 @@
+#+title: Home Manager 配置说明
+
+* 使用环境变量加载本机配置
+
+公共配置可以通过环境变量加载每台机器独立的 Home Manager 模块。这样机器相关配置不需要放在当前仓库中。
+
+** 本机配置文件
+
+在目标机器上创建，例如 =~/etc/home-manager/machine.nix=：
+
+#+begin_src nix
+{ config, pkgs, ... }:
+{
+  emacs.enable = true;
+
+  services.frps.enable = true;
+}
+#+end_src
+
+该文件应返回一个 Home Manager module。每台机器可以维护不同的文件内容。
+
+** Flake 中导入
+
+在 =flake.nix= 中读取环境变量，并导入对应模块：
+
+#+begin_src nix
+outputs = inputs:
+  let
+    machineConfigPath = builtins.getEnv "HM_MACHINE_CONFIG";
+
+    machineConfig =
+      if machineConfigPath == "" then
+        throw "HM_MACHINE_CONFIG is not set"
+      else
+        import (builtins.toPath machineConfigPath);
+  in {
+    homeConfigurations.data =
+      inputs.home-manager.lib.homeManagerConfiguration {
+        pkgs = inputs.nixpkgs.legacyPackages.x86_64-linux;
+
+        modules = [
+          ./modules/home
+          ./modules/pkgs
+          machineConfig
+        ];
+      };
+  };
+#+end_src
+
+这里的 =machineConfig= 是一个 Home Manager module，可以直接放进 =modules= 列表。
+
+** 执行方式
+
+由于 =builtins.getEnv= 属于非纯求值，执行时需要使用 =--impure=：
+
+#+begin_src sh
+export HM_MACHINE_CONFIG=/etc/home-manager/machine.nix
+nix run --impure home-manager -- switch --flake .#data
+#+end_src
+
+也可以只对单次命令设置：
+
+#+begin_src sh
+HM_MACHINE_CONFIG=/etc/home-manager/machine.nix \
+  nix run --impure home-manager -- switch --flake .#data
+#+end_src
+
+其他需要求值 Flake 的命令也需要 =--impure=：
+
+#+begin_src sh
+nix flake show --impure
+nix flake lock --impure
+#+end_src
+
+** 注意事项
+
+- =HM_MACHINE_CONFIG= 应使用绝对路径，不能直接依赖 =~= 展开。
+- 外部配置文件不会被 =flake.lock= 锁定，文件内容变化会直接影响下一次求值。
+- 不要在配置文件中直接写入密码、访问令牌或私钥。
+- 即使配置文件不在当前仓库中，被 Nix 声明引用的内容仍可能进入 Nix Store；敏感内容可能对本机用户可读。
+- 如果需要可复现地锁定私有机器配置，优先使用独立的私有 Flake input。
+
+* 使用私有配置仓库作为 Flake input
+
+当每台机器的配置需要独立维护，同时又希望部署过程可复现时，可以把机器相关配置放到独立的私有 Git 仓库，并作为公共 Flake 的额外 input。
+
+** 公共配置仓库
+
+在公共仓库的 =flake.nix= 中声明私有 input：
+
+#+begin_src nix
+inputs = {
+  nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+
+  home-manager = {
+    url = "github:nix-community/home-manager/release-26.05";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+  private-config = {
+    url = "git+ssh://git@git.example.com/infra/home-manager-private.git?ref=main";
+    flake = true;
+  };
+};
+#+end_src
+
+公共仓库为私有仓库中的每个机器模块生成一个 Home Manager 配置：
+
+#+begin_src nix
+outputs = inputs:
+  let
+    system = "x86_64-linux";
+  in {
+    homeConfigurations = inputs.nixpkgs.lib.mapAttrs (_hostname: machineModule:
+      inputs.home-manager.lib.homeManagerConfiguration {
+        pkgs = inputs.nixpkgs.legacyPackages.${system};
+
+        modules = [
+          ./modules/home
+          ./modules/pkgs
+          machineModule
+        ];
+      }
+    ) inputs.private-config.homeManagerModules;
+  };
+#+end_src
+
+** 私有配置仓库
+
+私有仓库的 =flake.nix= 暴露 =homeManagerModules=：
+
+#+begin_src nix
+{
+  outputs = { self }:
+    let
+      machinesDir = ./machines;
+      machineFiles = builtins.readDir machinesDir;
+      hostnames = map
+        (filename: builtins.substring 0 (builtins.stringLength filename - 4) filename)
+        (builtins.filter
+          (filename:
+            machineFiles.${filename} == "regular"
+            && builtins.substring 0 1 filename != "_"
+            && builtins.match ".+\\.nix" filename != null
+          )
+          (builtins.attrNames machineFiles));
+    in {
+      homeManagerModules = builtins.listToAttrs (map (hostname: {
+        name = hostname;
+        value = ./machines/${hostname}.nix;
+      }) hostnames);
+    };
+}
+#+end_src
+
+例如：
+
+#+begin_example
+machines/
+├── vps01.nix
+├── vps02.nix
+└── _template.nix
+#+end_example
+
+会生成 =homeManagerModules.vps01= 和 =homeManagerModules.vps02=，而以下划线开头的文件会被忽略。
+
+** 部署和锁定版本
+
+目标机器需要能够通过 SSH 访问私有仓库，例如使用 SSH key 或 SSH agent。第一次初始化或更新私有配置时：
+
+#+begin_src sh
+nix flake lock --update-input private-config
+#+end_src
+
+之后 =flake.lock= 会固定私有仓库的 revision。正常部署时不需要 =--impure=：
+
+#+begin_src sh
+nix run home-manager -- switch --flake .#vps01
+#+end_src
+
+如果希望根据系统 hostname 自动选择配置，可以在 Flake 外部读取 hostname，再选择对应输出，而不要在纯 Flake 求值中使用 =builtins.getEnv=：
+
+#+begin_src sh
+hostname="$(hostname -s)"
+nix run home-manager -- switch --flake ".#${hostname}"
+#+end_src
+
+SSH URL 中不要写入密码或访问令牌。私有仓库的内容会参与 Nix 求值，若其中声明了敏感内容，仍需注意 Nix Store 的可读性。

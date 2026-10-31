@@ -1,12 +1,16 @@
-{ config, pkgs, lib, ... }:
 {
-
+  config,
+  pkgs,
+  lib,
+  ...
+}: {
   xdg.configFile."fish/completions/nix.fish".source = "${pkgs.nix}/share/fish/vendor_completions.d/nix.fish";
   # 2. 加入判断逻辑：如果 tmuxinator 启用了，才生成这个配置文件
-  xdg.configFile."fish/completions/tmuxinator.fish" = 
-    lib.mkIf config.programs.tmux.tmuxinator.enable {
-      source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
-    };
+  xdg.configFile."fish/completions/tmuxinator.fish" = lib.mkIf config.programs.tmux.tmuxinator.enable {
+    source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
+  };
+
+  home.shell.enableFishIntegration = true;
 
   programs.fish = {
     enable = true;
@@ -20,13 +24,12 @@
 
     # 1. 顶层配置：确保 Ansible 和管道脚本也能加载 Nix 路径
     shellInit = ''
-        if test -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
-        . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
-        end
+      if test -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
+      . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
+      end
     '';
 
     shellAliases = {
-
       mux = "tmuxinator";
       hm = "home-manager";
       cm = "chezmoi";
@@ -41,47 +44,46 @@
       lltr = "eza -lhr -s time --no-quotes --time-style long-iso";
       # 3proxy log
       t3pl = "tail -f /var/log/3proxy/3proxy-$(date +%y%m%d).log";
-      
     };
 
     loginShellInit = ''
 
-     # -g global, -x  xexport 
-     set -gx GOROOT /opt/tools/go
-     set -gx GOPATH /opt/tools/repo/go
+      # -g global, -x  xexport
+      set -gx GOROOT /opt/tools/go
+      set -gx GOPATH /opt/tools/repo/go
 
-     fish_add_path ~/.local/bin
-     fish_add_path $GOROOT/bin
-     fish_add_path $GOPATH/bin
-
-     '';
-
-    interactiveShellInit = ''
-
-     set -g fish_greeting 
-
-
-     if set -q SSH_AUTH_SOCK; and test "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock"
-         ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
-     end
-
-     set -gx SSH_AUTH_SOCK "$HOME/.ssh/ssh_auth_sock"
-     # GPG Agent 动态软链接接管
-     if test -S "$HOME/.gnupg/S.gpg-agent"
-         # 1. 杀死系统可能自动唤醒的空壳 Agent
-         gpgconf --kill gpg-agent 2>/dev/null
-
-         # 2. 动态获取当前系统 GPG 真正期待的套接字路径 (自动包含正确的 UID)
-         set REAL_SOCKET (gpgconf --list-dirs agent-socket)
-
-         # 3. 确保目录存在，并强制将默认路径软链接到 SSH 建立的隧道上
-         mkdir -p (dirname "$REAL_SOCKET")
-         rm -f "$REAL_SOCKET"
-         ln -sf "$HOME/.gnupg/S.gpg-agent" "$REAL_SOCKET"
-     end
+      fish_add_path ~/.local/bin
+      fish_add_path $GOROOT/bin
+      fish_add_path $GOPATH/bin
 
     '';
 
+    interactiveShellInit = ''
+
+      set -g fish_greeting
+      set -gx GPG_TTY (tty)
+
+
+      if set -q SSH_AUTH_SOCK; and test "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock"
+          ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
+      end
+
+      set -gx SSH_AUTH_SOCK "$HOME/.ssh/ssh_auth_sock"
+      # GPG Agent 动态软链接接管
+      if test -S "$HOME/.gnupg/S.gpg-agent"
+          # 1. 杀死系统可能自动唤醒的空壳 Agent
+          gpgconf --kill gpg-agent 2>/dev/null
+
+          # 2. 动态获取当前系统 GPG 真正期待的套接字路径 (自动包含正确的 UID)
+          set REAL_SOCKET (gpgconf --list-dirs agent-socket)
+
+          # 3. 确保目录存在，并强制将默认路径软链接到 SSH 建立的隧道上
+          mkdir -p (dirname "$REAL_SOCKET")
+          rm -f "$REAL_SOCKET"
+          ln -sf "$HOME/.gnupg/S.gpg-agent" "$REAL_SOCKET"
+      end
+
+    '';
 
     plugins = [
       # Enable a plugin (here grc for colorized command output) from nixpkgs
@@ -111,13 +113,12 @@
       }
     ];
 
-
     functions = {
       zv-tmux-kill-other = ''
-         function zv-tmux-kill-other  
-          tmux list-windows  -a  -F '#{session_name}' | rg -v 'local' | sort -u | xargs -I xx tmux kill-session -t xx
-         end
-       '';
+        function zv-tmux-kill-other
+         tmux list-windows  -a  -F '#{session_name}' | rg -v 'local' | sort -u | xargs -I xx tmux kill-session -t xx
+        end
+      '';
     };
   };
 }

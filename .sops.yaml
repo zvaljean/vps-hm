@@ -1,0 +1,4 @@
+creation_rules:
+  # 相对于本文件，匹配 secrets 目录内任意层级的文件。
+  - path_regex: ^modules/pkgs/sops/secrets/.*$
+    pgp: "95FB5F53A1F4F87059065A877E7C703D57522B91!"

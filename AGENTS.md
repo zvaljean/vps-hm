@@ -11,7 +11,11 @@
 - `content-org/hm-vps.org` 是本项目配置的主要来源。
 - 仓库中的 Nix 文件由 `content-org/hm-vps.org` 生成。
 - 修改配置时，应先修改 `content-org/hm-vps.org` 中对应的 subtree，而不是直接修改生成的 Nix 文件。
+- `modules/pkgs/emacs/config/` 下的 Emacs 配置由 `content-org/emacs-init.org` 通过 Org Babel tangle 生成。
+- 修改 Emacs 配置时，应先修改 `content-org/emacs-init.org`，不要直接修改 `modules/pkgs/emacs/config/` 下的生成文件。
 - 只有用户明确要求时，才执行 Org Babel tangle 或其他生成操作。
+- SOPS 加密文件可以进入仓库，但 age 私钥、云 KMS 凭据和其他解密凭据不得进入仓库。
+- Home Manager 使用 `sops-nix` 时，目标主机必须提供对应的解密密钥，并运行 user systemd 以启动 `sops-nix.service`。
 
 ## 验证与执行
 

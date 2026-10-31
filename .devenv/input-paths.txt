@@ -1,0 +1,12 @@
+/home/valjean/.config/nixpkgs/overlays
+/home/valjean/.config/nixpkgs/overlays.nix
+/home/valjean/workspace/own/misc/home-manager/.devenv/bootstrap/bootstrapLib.nix
+/home/valjean/workspace/own/misc/home-manager/.devenv/bootstrap/default.nix
+/home/valjean/workspace/own/misc/home-manager/.devenv/bootstrap/resolve-lock.nix
+/home/valjean/workspace/own/misc/home-manager/.env
+/home/valjean/workspace/own/misc/home-manager/devenv.local.nix
+/home/valjean/workspace/own/misc/home-manager/devenv.lock
+/home/valjean/workspace/own/misc/home-manager/devenv.nix
+/home/valjean/workspace/own/misc/home-manager/devenv.yaml
+/home/valjean/workspace/own/misc/home-manager/devops/basic/default.nix
+/run/user/1000/devenv-5a29be5/processes/native-manager.pid

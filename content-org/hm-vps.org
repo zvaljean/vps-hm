@@ -11,41 +11,41 @@
         url = "github:nix-community/home-manager/release-26.05";
         inputs.nixpkgs.follows = "nixpkgs";
       };
+      sops-nix = {
+        url = "github:Mic92/sops-nix";
+        inputs.nixpkgs.follows = "nixpkgs";
+      };
     };
 
-    outputs = inputs:
-      let
-        system = "x86_64-linux";
-        pkgs = inputs.nixpkgs.legacyPackages.${system};
-        unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${system};
-        username = "data";
-        homeDir = "/home/data";
-      in
-        {
-          # add formatter
-          formatter.${system} = pkgs.alejandra;
+    outputs = inputs: let
+      system = "x86_64-linux";
+      pkgs = inputs.nixpkgs.legacyPackages.${system};
+      unstablePkgs = inputs.nixpkgs-unstable.legacyPackages.${system};
+      username = "data";
+      homeDir = "/home/data";
+    in {
+      # add formatter
+      formatter.${system} = pkgs.alejandra;
 
-          homeConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
-            inherit pkgs;
-            extraSpecialArgs = { inherit unstablePkgs; };
-            modules = [
-              {
-                home.username = username;
-                home.homeDirectory = homeDir;
-                home.stateVersion = "26.05"; 
-                home.shell.enableFishIntegration = true;
-                programs.home-manager.enable = true;
-              }
-
-              ./modules/home
-              ./modules/pkgs
-              ./modules/home/trigger.nix
-            ];
-
-          };
+      homeConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        extraSpecialArgs = {
+          inherit unstablePkgs inputs;
         };
+        modules = [
+          {
+            home.username = username;
+            home.homeDirectory = homeDir;
+            home.stateVersion = "26.05";
+            programs.home-manager.enable = true;
+          }
+          ./modules/home
+          ./modules/pkgs
+          ./modules/home/trigger.nix
+        ];
+      };
+    };
   }
-
 #+end_src
 
 ** modules
@@ -74,14 +74,20 @@
     #   ];
 
     home.file = {
-
+      # 加入sops-nix后，第一次执行会出现oom
+      ".config/nix/nix.conf".text = ''
+        max-jobs = auto
+        cores = 0
+      '';
     };
 
     # 会合并到 fish 中
     home.shellAliases = {
       ff = "exec fish -l";
       # cm = "chezmoi";
-      # hm = "home-manager";
+      hm = "home-manager";
+      vim = "nvim";
+
     };
 
     home.sessionVariables = {
@@ -92,8 +98,9 @@
       LC_CTYPE="UTF-8";
       GNUPGHOME="~/.gnupg";
       LANG="en_US.UTF-8";
-      EDITOR="vim";
-      VISUAL="vim";
+      EDITOR="nvim";
+      VISUAL="nvim";
+      NIX_REMOTE="daemon";
       TERM = "xterm-256color";
 
     };
@@ -103,17 +110,20 @@
 
 **** trigger
 #+begin_src nix :tangle (concat hm-home "trigger.nix") :mkdirp yes
-  { config, pkgs, ... }:
   {
+    config,
+    pkgs,
+    ...
+  }: {
+    sops.enable = false;
+    emacs.enable = false;
     services.frps = {
-      enable = true;
-
+      enable = false;
       tokenFile = "${config.xdg.configHome}/frp/token";
       logFile = "console";
       serverAddr = "0.0.0.0";
       serverPort = 10000;
     };
-
   }
 #+end_src
 
@@ -150,28 +160,35 @@
         curlFull
         rsync
         ranger
+        acl
+        
         socat
         net-tools
-        acl
         inetutils
-        wget
+        nmap
+        iproute2
+        netcat-openbsd
+
         fastfetch
+
+        wget
         fd
         ripgrep 
         jq 
         eza 
         fzf 
         bat
-        emacs
-        vim-full
-        chezmoi
+        neovim
+        # vim-full
         gnupg
         fontconfig
         gnumake
+
+        # sops
+        # age
+
+        chezmoi
         devenv
-        nmap
-        iproute2
-        netcat-openbsd
 
         yt-dlp
       ;
@@ -181,16 +198,19 @@
 #+end_src
 **** fish
 #+begin_src nix :tangle (concat hm-pkgs "fish/default.nix") :mkdirp yes
-
-  { config, pkgs, lib, ... }:
   {
-
+    config,
+    pkgs,
+    lib,
+    ...
+  }: {
     xdg.configFile."fish/completions/nix.fish".source = "${pkgs.nix}/share/fish/vendor_completions.d/nix.fish";
     # 2. 加入判断逻辑：如果 tmuxinator 启用了，才生成这个配置文件
-    xdg.configFile."fish/completions/tmuxinator.fish" = 
-      lib.mkIf config.programs.tmux.tmuxinator.enable {
-        source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
-      };
+    xdg.configFile."fish/completions/tmuxinator.fish" = lib.mkIf config.programs.tmux.tmuxinator.enable {
+      source = "${pkgs.tmuxinator}/share/fish/vendor_completions.d/tmuxinator.fish";
+    };
+
+    home.shell.enableFishIntegration = true;
 
     programs.fish = {
       enable = true;
@@ -204,13 +224,12 @@
 
       # 1. 顶层配置：确保 Ansible 和管道脚本也能加载 Nix 路径
       shellInit = ''
-          if test -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
-          . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
-          end
+        if test -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
+        . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.fish'
+        end
       '';
 
       shellAliases = {
-
         mux = "tmuxinator";
         hm = "home-manager";
         cm = "chezmoi";
@@ -225,47 +244,46 @@
         lltr = "eza -lhr -s time --no-quotes --time-style long-iso";
         # 3proxy log
         t3pl = "tail -f /var/log/3proxy/3proxy-$(date +%y%m%d).log";
-        
       };
 
       loginShellInit = ''
 
-       # -g global, -x  xexport 
-       set -gx GOROOT /opt/tools/go
-       set -gx GOPATH /opt/tools/repo/go
+        # -g global, -x  xexport
+        set -gx GOROOT /opt/tools/go
+        set -gx GOPATH /opt/tools/repo/go
 
-       fish_add_path ~/.local/bin
-       fish_add_path $GOROOT/bin
-       fish_add_path $GOPATH/bin
-
-       '';
-
-      interactiveShellInit = ''
-
-       set -g fish_greeting 
-
-
-       if set -q SSH_AUTH_SOCK; and test "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock"
-           ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
-       end
-
-       set -gx SSH_AUTH_SOCK "$HOME/.ssh/ssh_auth_sock"
-       # GPG Agent 动态软链接接管
-       if test -S "$HOME/.gnupg/S.gpg-agent"
-           # 1. 杀死系统可能自动唤醒的空壳 Agent
-           gpgconf --kill gpg-agent 2>/dev/null
-
-           # 2. 动态获取当前系统 GPG 真正期待的套接字路径 (自动包含正确的 UID)
-           set REAL_SOCKET (gpgconf --list-dirs agent-socket)
-
-           # 3. 确保目录存在，并强制将默认路径软链接到 SSH 建立的隧道上
-           mkdir -p (dirname "$REAL_SOCKET")
-           rm -f "$REAL_SOCKET"
-           ln -sf "$HOME/.gnupg/S.gpg-agent" "$REAL_SOCKET"
-       end
+        fish_add_path ~/.local/bin
+        fish_add_path $GOROOT/bin
+        fish_add_path $GOPATH/bin
 
       '';
 
+      interactiveShellInit = ''
+
+        set -g fish_greeting
+        set -gx GPG_TTY (tty)
+
+
+        if set -q SSH_AUTH_SOCK; and test "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock"
+            ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
+        end
+
+        set -gx SSH_AUTH_SOCK "$HOME/.ssh/ssh_auth_sock"
+        # GPG Agent 动态软链接接管
+        if test -S "$HOME/.gnupg/S.gpg-agent"
+            # 1. 杀死系统可能自动唤醒的空壳 Agent
+            gpgconf --kill gpg-agent 2>/dev/null
+
+            # 2. 动态获取当前系统 GPG 真正期待的套接字路径 (自动包含正确的 UID)
+            set REAL_SOCKET (gpgconf --list-dirs agent-socket)
+
+            # 3. 确保目录存在，并强制将默认路径软链接到 SSH 建立的隧道上
+            mkdir -p (dirname "$REAL_SOCKET")
+            rm -f "$REAL_SOCKET"
+            ln -sf "$HOME/.gnupg/S.gpg-agent" "$REAL_SOCKET"
+        end
+
+      '';
 
       plugins = [
         # Enable a plugin (here grc for colorized command output) from nixpkgs
@@ -295,17 +313,15 @@
         }
       ];
 
-
       functions = {
         zv-tmux-kill-other = ''
-           function zv-tmux-kill-other  
-            tmux list-windows  -a  -F '#{session_name}' | rg -v 'local' | sort -u | xargs -I xx tmux kill-session -t xx
-           end
-         '';
+          function zv-tmux-kill-other
+           tmux list-windows  -a  -F '#{session_name}' | rg -v 'local' | sort -u | xargs -I xx tmux kill-session -t xx
+          end
+        '';
       };
     };
   }
-
 #+end_src
 **** starship
 ***** default
@@ -343,7 +359,6 @@
   	$git_branch$git_commit$git_state$git_status\
   	$character\
   	"""
-
   	[character]
   	success_symbol = "[ ➤]($bold fg:#f8f8f2)"
   	error_symbol = "[ ➤]($bold fg:#fb4934)"
@@ -364,9 +379,9 @@
   	format = " [ $branch](bold fg:#8be9fd)"
 
   	[hostname]
-  	format = "[$hostname](fg:#bd93f9) "  
+  	format = "[$hostname](fg:#bd93f9) "
+  	trim_at = '.'
   	ssh_only = true  
-      trim_at = '.'
 
 #+end_src
 **** tmux
@@ -405,6 +420,24 @@
     programs.zoxide = {
       enable = true;
       enableFishIntegration = true;
+    };
+  }
+#+end_src
+**** emacs
+#+begin_src nix :tangle (concat hm-pkgs "emacs/default.nix") :mkdirp yes
+  {
+    config,
+    lib,
+    pkgs,
+    ...
+  }: {
+    options.emacs = {
+      enable = lib.mkEnableOption "the emacs trigger";
+    };
+
+    config = lib.mkIf config.emacs.enable {
+      home.packages = [pkgs.emacs];
+      xdg.configFile."emacs".source = ./config;
     };
   }
 #+end_src
@@ -506,6 +539,82 @@
     };
   }
 #+end_src
+**** sops-nix
+***** secret config
+****** ssh config
+#+header: :var data=(expand-file-name "~/.ssh/conf.d/vps/vps.conf")
+#+header: :var file=(concat hm-pkgs "sops/secrets/ssh-config.enc")
+#+begin_src sh :results output none
+  sed -n '/^####data-user/,/^####data-user/{//!p}'  "$data"  | sops encrypt \
+  																  --input-type binary \
+  																  --output-type binary \
+  																  --filename-override  "$file" \
+  																  > "$file"
+#+end_src
+
+****** frp token
+- for frps server
+****** summary
+
+#+header: :var data=(concat hm-pkgs "sops/secrets")
+#+begin_src sh :results output
+  tree "$data"
+
+#+end_src
+
+#+RESULTS:
+: ../modules/pkgs/sops/secrets
+: ├── frp-token.enc
+: └── ssh-config
+: 
+: 1 directory, 2 files
+
+***** derivation
+#+begin_src nix :tangle (concat hm-pkgs "sops/default.nix") :mkdirp yes
+  {
+    config,
+    inputs,
+    lib,
+    pkgs,
+    ...
+  }: {
+
+    _class = "homeManager";
+
+    imports = [inputs.sops-nix.homeManagerModules.sops];
+
+    options.sops.enable = lib.mkEnableOption "SOPS CLI and the GnuPG secret.";
+
+    config = lib.mkIf config.sops.enable {
+      # sops-nix 提供运行时解密，交互加密和编辑另需 SOPS CLI。
+      home.packages = [pkgs.sops];
+
+      # 测试脚本和示例密文位于 secrets/demo，当前仅启用 FRP 秘密。
+      # 只引用仓库外的密钥环路径，不能把私钥作为 Nix path 导入 store。
+      #   defaultSymlinkPath = "${config.home.homeDirectory}/.local/secrets";
+      sops = {
+        gnupg.home = "${config.home.homeDirectory}/.gnupg";
+        # 表示不从 SSH 私钥派生密钥
+        gnupg.sshKeyPaths = [];
+
+        # defaultSopsFile = ./secrets/demo/secrets.yaml;
+        # secrets.example-token = {
+        #   key = "example_token";
+        #   mode = "0400";
+        # };
+
+        secrets.frp = {
+          # path 是秘密文件的链接路径，不能占用 FRP 配置目录本身。
+          path = "${config.xdg.configHome}/frp/token";
+          sopsFile = ./secrets/frp-token.enc;
+          format = "binary";
+          mode = "0400";
+        };
+      };
+    };
+  }
+#+end_src
+
 ** local variable
 # Local Variables:
 # hm-dir: "../"
