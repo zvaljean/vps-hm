@@ -16,10 +16,10 @@
     enable = true;
 
     shellAbbrs = {
-      hm-b = "home-manager build";
-      hm-s = "home-manager switch";
-      hm-gen = "home-manager generations";
-      hm-pkg = "home-manager packages";
+      hmb = "home-manager build";
+      hms = "home-manager switch";
+      hmgen = "home-manager generations";
+      hmpkg = "home-manager packages";
     };
 
     # 1. 顶层配置：确保 Ansible 和管道脚本也能加载 Nix 路径
@@ -31,8 +31,10 @@
 
     shellAliases = {
       mux = "tmuxinator";
+      # cm = "chezmoi";
+
       hm = "home-manager";
-      cm = "chezmoi";
+      vim = "nvim";
 
       l = "ls -lhF --group-directories-first";
       ld = "eza -ld */ --no-quotes --time-style long-iso";

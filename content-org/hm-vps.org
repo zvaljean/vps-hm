@@ -65,14 +65,6 @@
 
   { config, pkgs, ... }:
   {
-    # packages 可以执行脚本
-    # home.packages =  [ (pkgs.writeShellScriptBin "my-hello" ''
-    #      echo "Hello, ${config.home.username}!"
-    #      echo "system, ${pkgs.system}!"
-    #      echo "system, ${zzv}!"
-    #    '')
-    #   ];
-
     home.file = {
       # 加入sops-nix后，第一次执行会出现oom
       ".config/nix/nix.conf".text = ''
@@ -81,17 +73,7 @@
       '';
     };
 
-    # 会合并到 fish 中
-    home.shellAliases = {
-      ff = "exec fish -l";
-      # cm = "chezmoi";
-      hm = "home-manager";
-      vim = "nvim";
-
-    };
-
     home.sessionVariables = {
-
       PAGER="less";
       LC_TIME="en_US.UTF-8";
       LC_ALL="en_US.UTF-8";
@@ -102,9 +84,7 @@
       VISUAL="nvim";
       NIX_REMOTE="daemon";
       TERM = "xterm-256color";
-
     };
-
   }
 #+end_src
 
@@ -115,8 +95,15 @@
     pkgs,
     ...
   }: {
+    extra-tools.enable = true;
+
     sops.enable = false;
     emacs.enable = true;
+    tmux.enable = true;
+    yt-dlp.enable = true;
+    devenv.enable = false;
+    neovim.enable = true;
+
     services.frps = {
       enable = false;
       tokenFile = "${config.xdg.configHome}/frp/token";
@@ -148,52 +135,118 @@
     imports = map (name: ./${name}) validModules;
   }
 #+end_src
-**** common tools
+**** tools
+***** basic 
 #+begin_src nix :tangle (concat hm-pkgs "common/default.nix") :mkdirp yes
-  { config, pkgs, ... }:
   {
+    config,
+    pkgs,
+    ...
+  }: {
+    imports = [./extra-tools.nix];
+
     home.packages = builtins.attrValues {
-      inherit (pkgs)
+      inherit
+        (pkgs)
         git
         tree
         #curl
         curlFull
         rsync
-        ranger
         acl
-        
         socat
         net-tools
         inetutils
         nmap
         iproute2
         netcat-openbsd
-
         fastfetch
-
         wget
         fd
-        ripgrep 
-        jq 
-        eza 
-        fzf 
+        ripgrep
+        jq
+        eza
+        fzf
         bat
-        neovim
-        # vim-full
-        gnupg
-        fontconfig
-        gnumake
-
-        # sops
-        # age
-
-        chezmoi
-        devenv
-
-        yt-dlp
       ;
-      # inherit (pkgs) 只用于一级属性, ++ 拼接列表，单独追加 pkgs.nerd-fonts.jetbrains-mono
-    } ++ [ pkgs.nerd-fonts.jetbrains-mono ];
+    };
+  }
+#+end_src
+***** extra
+#+begin_src nix :tangle (concat hm-pkgs "common/extra-tools.nix") :mkdirp yes
+  {
+    config,
+    pkgs,
+    lib,
+    ...
+  }: {
+    options.extra-tools = {
+      enable = lib.mkEnableOption "the extra tools trigger";
+    };
+
+    config = lib.mkIf config.extra-tools.enable {
+      home.packages =
+        builtins.attrValues {
+          inherit
+            (pkgs)
+            ranger
+            gnupg
+            fontconfig
+            chezmoi
+            gnumake
+          ;
+        }
+        ++ [
+          pkgs.nerd-fonts.jetbrains-mono
+          pkgs.lua54Packages.lua
+          pkgs.lua54Packages.luarocks
+        ];
+    };
+  }
+#+end_src
+**** neovim
+#+begin_src nix :tangle (concat hm-pkgs "neovim/default.nix") :mkdirp yes
+  {
+    config,
+    pkgs,
+    lib,
+    ...
+  }: {
+    options.neovim.enable = lib.mkEnableOption "neovim package trigger.";
+
+    config = lib.mkIf config.neovim.enable {
+      home.packages = [ pkgs.neovim ];
+    };
+  }
+#+end_src
+**** yt-dlp
+#+begin_src nix :tangle (concat hm-pkgs "yt-dlp/default.nix") :mkdirp yes
+  {
+    config,
+    pkgs,
+    lib,
+    ...
+  }: {
+    options.yt-dlp.enable = lib.mkEnableOption "yt-dlp package trigger.";
+
+    config = lib.mkIf config.yt-dlp.enable {
+      home.packages = [ pkgs.yt-dlp ];
+    };
+  }
+#+end_src
+**** devenv
+#+begin_src nix :tangle (concat hm-pkgs "devenv/default.nix") :mkdirp yes
+  {
+    config,
+    pkgs,
+    lib,
+    ...
+  }: {
+    options.devenv.enable = lib.mkEnableOption "devenv package trigger.";
+
+    config = lib.mkIf config.devenv.enable {
+      home.packages = [ pkgs.devenv ];
+    };
   }
 #+end_src
 **** fish
@@ -216,10 +269,10 @@
       enable = true;
 
       shellAbbrs = {
-        hm-b = "home-manager build";
-        hm-s = "home-manager switch";
-        hm-gen = "home-manager generations";
-        hm-pkg = "home-manager packages";
+        hmb = "home-manager build";
+        hms = "home-manager switch";
+        hmgen = "home-manager generations";
+        hmpkg = "home-manager packages";
       };
 
       # 1. 顶层配置：确保 Ansible 和管道脚本也能加载 Nix 路径
@@ -230,9 +283,12 @@
       '';
 
       shellAliases = {
+
         mux = "tmuxinator";
+        # cm = "chezmoi";
+
         hm = "home-manager";
-        cm = "chezmoi";
+        vim = "nvim";
 
         l = "ls -lhF --group-directories-first";
         ld = "eza -ld */ --no-quotes --time-style long-iso";
@@ -351,67 +407,38 @@
 
 ***** config
 #+begin_src toml :tangle (concat hm-pkgs "starship/starship.toml") :mkdirp yes
-  	# Port of Oh My Zsh theme "avit" to Starship.
-  	add_newline = false
-  	format = """\
-  	$hostname\
-  	$directory\
-  	$git_branch$git_commit$git_state$git_status\
-  	$character\
-  	"""
-  	[character]
-  	success_symbol = "[ ➤]($bold fg:#f8f8f2)"
-  	error_symbol = "[ ➤]($bold fg:#fb4934)"
+  # Port of Oh My Zsh theme "avit" to Starship.
+  add_newline = false
+  format = """\
+  $hostname\
+  $directory\
+  $git_branch$git_commit$git_state$git_status\
+  $character\
+  """
+  [character]
+  success_symbol = "[ ➤]($bold fg:#f8f8f2)"
+  error_symbol = "[ ➤]($bold fg:#fb4934)"
 
-  	[directory]
-  	disabled = false
-  	format = "[ $path](bold fg:#ff79c6)"
-  	truncate_to_repo = false
+  [directory]
+  disabled = false
+  format = "[ $path](bold fg:#ff79c6)"
+  truncate_to_repo = false
 
-  	[git_status]
-  	format = " ([$all_status$ahead_behind](bold fg:#8be9fd))"
-  	staged = "• "
-  	modified = "~ "
-  	untracked = "+ "
-  	deleted = "x "
+  [git_status]
+  format = " ([$all_status$ahead_behind](bold fg:#8be9fd))"
+  staged = "• "
+  modified = "~ "
+  untracked = "+ "
+  deleted = "x "
 
-  	[git_branch]
-  	format = " [ $branch](bold fg:#8be9fd)"
+  [git_branch]
+  format = " [ $branch](bold fg:#8be9fd)"
 
-  	[hostname]
-  	format = "[$hostname](fg:#bd93f9) "
-  	trim_at = '.'
-  	ssh_only = true  
-
+  [hostname]
+  format = "[$hostname](fg:#bd93f9) "
+  trim_at = '.'
+  ssh_only = true  
 #+end_src
-**** tmux
-***** config
-- af33f07134b76134acca9d01eacbdecca9c9cda6
-#+begin_src nix :tangle (concat hm-pkgs "tmux/default.nix") :mkdirp yes
-  {
-    config,
-    pkgs,
-    unstablePkgs,
-    ...
-  }: let
-    ohMyTmuxSrc = pkgs.fetchFromGitHub {
-      owner = "gpakosz";
-      repo = ".tmux";
-      rev = "af33f07134b76134acca9d01eacbdecca9c9cda6";
-      hash = "sha256-nXm664l84YSwZeRM4Hsweqgz+OlpyfwXcgEdyNGhaGA=";
-    };
-  in {
-    home.packages = builtins.attrValues {
-      tmuxinator = unstablePkgs.tmuxinator;
-      tmux = pkgs.tmux;
-    };
-
-    xdg.configFile = {
-      "tmux/tmux.conf".source = "${ohMyTmuxSrc}/.tmux.conf";
-    };
-  }
-#+end_src
-
 **** zoxide
 #+begin_src nix :tangle (concat hm-pkgs "zoxide/default.nix") :mkdirp yes
   { config, pkgs, lib, ... }:
@@ -423,6 +450,40 @@
     };
   }
 #+end_src
+**** tmux
+***** config
+- af33f07134b76134acca9d01eacbdecca9c9cda6
+#+begin_src nix :tangle (concat hm-pkgs "tmux/default.nix") :mkdirp yes
+  {
+    config,
+    pkgs,
+    unstablePkgs,
+    lib,
+    ...
+  }: let
+    ohMyTmuxSrc = pkgs.fetchFromGitHub {
+      owner = "gpakosz";
+      repo = ".tmux";
+      rev = "af33f07134b76134acca9d01eacbdecca9c9cda6";
+      hash = "sha256-nXm664l84YSwZeRM4Hsweqgz+OlpyfwXcgEdyNGhaGA=";
+    };
+  in {
+    options.tmux.enable = lib.mkEnableOption "tmux config trigger.";
+
+    config = lib.mkIf config.tmux.enable {
+
+      home.packages = builtins.attrValues {
+        tmuxinator = unstablePkgs.tmuxinator;
+        tmux = pkgs.tmux;
+      };
+
+      xdg.configFile = {
+        "tmux/tmux.conf".source = "${ohMyTmuxSrc}/.tmux.conf";
+      };
+    };
+  }
+#+end_src
+
 **** emacs
 #+begin_src nix :tangle (concat hm-pkgs "emacs/default.nix") :mkdirp yes
   {
@@ -560,7 +621,7 @@
   																  --filename-override  "$file" \
   																  > "$file"
 #+end_src
-
+****** 
 ****** frp token
 - for frps server
 ****** summary

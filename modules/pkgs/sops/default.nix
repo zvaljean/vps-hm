@@ -5,7 +5,6 @@
   pkgs,
   ...
 }: {
-
   _class = "homeManager";
 
   imports = [inputs.sops-nix.homeManagerModules.sops];

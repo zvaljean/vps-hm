@@ -2,6 +2,7 @@
   config,
   pkgs,
   unstablePkgs,
+  lib,
   ...
 }: let
   ohMyTmuxSrc = pkgs.fetchFromGitHub {
@@ -11,12 +12,16 @@
     hash = "sha256-nXm664l84YSwZeRM4Hsweqgz+OlpyfwXcgEdyNGhaGA=";
   };
 in {
-  home.packages = builtins.attrValues {
-    tmuxinator = unstablePkgs.tmuxinator;
-    tmux = pkgs.tmux;
-  };
+  options.tmux.enable = lib.mkEnableOption "tmux config trigger.";
 
-  xdg.configFile = {
-    "tmux/tmux.conf".source = "${ohMyTmuxSrc}/.tmux.conf";
+  config = lib.mkIf config.tmux.enable {
+    home.packages = builtins.attrValues {
+      tmuxinator = unstablePkgs.tmuxinator;
+      tmux = pkgs.tmux;
+    };
+
+    xdg.configFile = {
+      "tmux/tmux.conf".source = "${ohMyTmuxSrc}/.tmux.conf";
+    };
   };
 }

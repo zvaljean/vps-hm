@@ -3,8 +3,15 @@
   pkgs,
   ...
 }: {
+  extra-tools.enable = true;
+
   sops.enable = false;
   emacs.enable = true;
+  tmux.enable = true;
+  yt-dlp.enable = true;
+  devenv.enable = false;
+  neovim.enable = true;
+
   services.frps = {
     enable = false;
     tokenFile = "${config.xdg.configHome}/frp/token";
