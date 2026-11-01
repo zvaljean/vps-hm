@@ -12,6 +12,7 @@
     hash = "sha256-E5dQ0CHgNt4VMb6P23xbqjJtO27NDL84/QR8pv6acq8=";
   };
 in {
+
   options.emacs = {
     enable = lib.mkEnableOption "the emacs trigger";
   };

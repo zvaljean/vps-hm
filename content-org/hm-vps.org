@@ -615,29 +615,71 @@
 #+header: :var data=(expand-file-name "~/.ssh/conf.d/vps/vps.conf")
 #+header: :var file=(concat hm-pkgs "sops/secrets/ssh-config.enc")
 #+begin_src sh :results output none
-  sed -n '/^####data-user/,/^####data-user/{//!p}'  "$data"  | sops encrypt \
-  																  --input-type binary \
-  																  --output-type binary \
-  																  --filename-override  "$file" \
-  																  > "$file"
+  target=`sed -n '/^####data-user/,/^####data-user/{//!p}'  "$data" `
+  echo $target | sops encrypt \
+  					--input-type binary \
+  					--output-type binary \
+  					--filename-override  "$file" \
+  					> "$file"
 #+end_src
-****** 
 ****** frp token
 - for frps server
+****** init config
+******* ssh confin process 
+#+name: gen-home-manager-config
+#+header: :var data=(org-babel-ref-resolve (concat zv-ssh-config ":server-data"))
+#+header: :var user="data"
+#+begin_src emacs-lisp :results value  
+  (require 'json)
+  (mapconcat 'identity
+             (delq nil
+                   (mapcar (lambda (row)
+                             (when (string= (nth 0 row) "t")
+                               (let* ((host (car (split-string (nth 4 row) "\\.")))
+                                      (target (format "%s_%s" host user))
+                                      (target-md5 (md5 target)))
+                                 (json-encode (list (cons target target-md5))))))
+                           data))
+             "\n")
+#+end_src
+
+******* debug
+#+call: gen-home-manager-config()
+******* data
+#+header: :var res1=gen-home-manager-config()
+#+header: :var res2=gen-home-manager-config(user="root")
+#+header: :var file=(concat hm-pkgs "sops/secrets/init-config.enc")
+#+begin_src sh :results silent 
+  printf '%s\n%s\n' "$res1" "$res2" | \
+  	jq -Ss 'add'  | sops encrypt \
+  						 --input-type binary \
+  						 --output-type binary \
+  						 --filename-override  "$file" \
+  						 > "$file"
+#+end_src
+******* extract value
+#+begin_src shell
+  # array
+  jq -r '.[] | .kr_data // empty' init-config
+  jq -r '.kr_data // empty' init-config
+
+  cat secrets/init-config.enc  | sops --decrypt --input-type binary /dev/stdin
+#+end_src
+
 ****** summary
 
 #+header: :var data=(concat hm-pkgs "sops/secrets")
 #+begin_src sh :results output
   tree "$data"
-
 #+end_src
 
 #+RESULTS:
 : ../modules/pkgs/sops/secrets
 : ├── frp-token.enc
-: └── ssh-config
+: ├── init-config.enc
+: └── ssh-config.enc
 : 
-: 1 directory, 2 files
+: 1 directory, 3 files
 
 ***** derivation
 #+begin_src nix :tangle (concat hm-pkgs "sops/default.nix") :mkdirp yes
@@ -687,6 +729,7 @@
 
 ** local variable
 # Local Variables:
+# org-confirm-babel-evaluate: nil
 # hm-dir: "../"
 # hm-home: "../modules/home/"
 # hm-pkgs: "../modules/pkgs/"

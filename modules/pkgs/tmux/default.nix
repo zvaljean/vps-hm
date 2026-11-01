@@ -15,6 +15,7 @@ in {
   options.tmux.enable = lib.mkEnableOption "tmux config trigger.";
 
   config = lib.mkIf config.tmux.enable {
+
     home.packages = builtins.attrValues {
       tmuxinator = unstablePkgs.tmuxinator;
       tmux = pkgs.tmux;
