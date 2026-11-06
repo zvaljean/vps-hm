@@ -13,10 +13,10 @@
   neovim.enable = true;
 
   services.frps = {
-    enable = false;
+    enable = true;
     tokenFile = "${config.xdg.configHome}/frp/token";
     logFile = "console";
     serverAddr = "0.0.0.0";
-    serverPort = 10000;
+    serverPort = 10001;
   };
 }

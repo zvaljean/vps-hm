@@ -105,11 +105,11 @@
     neovim.enable = true;
 
     services.frps = {
-      enable = false;
+      enable = true;
       tokenFile = "${config.xdg.configHome}/frp/token";
       logFile = "console";
       serverAddr = "0.0.0.0";
-      serverPort = 10000;
+      serverPort = 10001;
     };
   }
 #+end_src
@@ -407,37 +407,37 @@
 
 ***** config
 #+begin_src toml :tangle (concat hm-pkgs "starship/starship.toml") :mkdirp yes
-  # Port of Oh My Zsh theme "avit" to Starship.
-  add_newline = false
-  format = """\
-  $hostname\
-  $directory\
-  $git_branch$git_commit$git_state$git_status\
-  $character\
-  """
-  [character]
-  success_symbol = "[ ➤]($bold fg:#f8f8f2)"
-  error_symbol = "[ ➤]($bold fg:#fb4934)"
+  	# Port of Oh My Zsh theme "avit" to Starship.
+  	add_newline = false
+  	format = """\
+  	$hostname\
+  	$directory\
+  	$git_branch$git_commit$git_state$git_status\
+  	$character\
+  	"""
+  	[character]
+  	success_symbol = "[ ➤]($bold fg:#f8f8f2)"
+  	error_symbol = "[ ➤]($bold fg:#fb4934)"
 
-  [directory]
-  disabled = false
-  format = "[ $path](bold fg:#ff79c6)"
-  truncate_to_repo = false
+  	[directory]
+  	disabled = false
+  	format = "[ $path](bold fg:#ff79c6)"
+  	truncate_to_repo = false
 
-  [git_status]
-  format = " ([$all_status$ahead_behind](bold fg:#8be9fd))"
-  staged = "• "
-  modified = "~ "
-  untracked = "+ "
-  deleted = "x "
+  	[git_status]
+  	format = " ([$all_status$ahead_behind](bold fg:#8be9fd))"
+  	staged = "• "
+  	modified = "~ "
+  	untracked = "+ "
+  	deleted = "x "
 
-  [git_branch]
-  format = " [ $branch](bold fg:#8be9fd)"
+  	[git_branch]
+  	format = " [ $branch](bold fg:#8be9fd)"
 
-  [hostname]
-  format = "[$hostname](fg:#bd93f9) "
-  trim_at = '.'
-  ssh_only = true  
+  	[hostname]
+  	format = "[$hostname](fg:#bd93f9) "
+  	trim_at = '.'
+  	ssh_only = true  
 #+end_src
 **** zoxide
 #+begin_src nix :tangle (concat hm-pkgs "zoxide/default.nix") :mkdirp yes
