@@ -28,6 +28,7 @@
         rsync --delete -avzpP \
           --include='*/' \
           --include='*.nix' \
+          --include='Makefile' \
           --exclude='*' \
           ./ vps-data-hn-hk:~/.config/home-manager/
     '';
@@ -38,6 +39,7 @@
         rsync --delete -avzpP \
           --include='*/' \
           --include='*.nix' \
+          --include='Makefile' \
           --exclude='*' \
           ./ vps-data-6c-kr:~/.config/home-manager/
     '';

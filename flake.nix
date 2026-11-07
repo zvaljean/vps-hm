@@ -1,5 +1,5 @@
 {
-  description = "Home Manager configuration of data ";
+  description = "Home Manager configurations for VPS users";
   inputs = {
     # Specify the source of Home Manager and Nixpkgs.
     nixpkgs.url = "github:nixos/nixpkgs/nixos-26.05";
@@ -16,28 +16,48 @@
   outputs = inputs: let
     system = "x86_64-linux";
     pkgs = inputs.nixpkgs.legacyPackages.${system};
-    username = "data";
-    homeDir = "/home/data";
+    mkHome = {
+      username,
+      homeDirectory,
+      extraModules ? [],
+    }:
+      inputs.home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+        extraSpecialArgs = {
+          inherit inputs;
+        };
+        modules =
+          [
+            {
+              home.username = username;
+              home.homeDirectory = homeDirectory;
+              home.stateVersion = "26.05";
+              programs.home-manager.enable = true;
+            }
+            ./modules/home
+            ./modules/pkgs
+            ./modules/home/trigger.nix
+          ]
+          ++ extraModules;
+      };
   in {
     # add formatter
     # formatter.${system} = pkgs.alejandra;
 
-    homeConfigurations.${username} = inputs.home-manager.lib.homeManagerConfiguration {
-      inherit pkgs;
-      extraSpecialArgs = {
-        inherit inputs;
+    homeConfigurations = {
+      data = mkHome {
+        username = "data";
+        homeDirectory = "/home/data";
       };
-      modules = [
-        {
-          home.username = username;
-          home.homeDirectory = homeDir;
-          home.stateVersion = "26.05";
-          programs.home-manager.enable = true;
-        }
-        ./modules/home
-        ./modules/pkgs
-        ./modules/home/trigger.nix
-      ];
+      root = mkHome {
+        username = "root";
+        homeDirectory = "/root";
+        extraModules = [
+          ({lib, ...}: {
+            services.frps.enable = lib.mkForce false;
+          })
+        ];
+      };
     };
   };
 }

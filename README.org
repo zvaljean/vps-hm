@@ -1,5 +1,29 @@
 #+title: Home Manager 配置说明
 
+* Makefile usage
+
+在项目根目录运行 =make= 或 =make usage= 查看命令说明。
+默认配置名称为当前用户名，也可通过 =CONFIG=data= 或 =CONFIG=root= 指定。
+
+#+begin_src sh :eval never
+make usage
+make build CONFIG=data
+make dry-run CONFIG=data
+make switch CONFIG=data
+# 在 root 登录环境中执行：
+make switch CONFIG=root
+#+end_src
+
+- 先在 Emacs 中从 =content-org/hm-vps.org= tangle 最新配置；Makefile 不自动执行 tangle。
+- =build= 不激活配置；=dry-run= 不激活，但仍可能触发求值、下载或构建。
+- =build=、=switch= 和 =dry-run= 均传入 =--no-out-link=，不生成 =result= 链接。
+- Makefile 使用 =.NOTPARALLEL:=，即使传入 =-j=，同一次 make 内也串行执行目标；不同终端的 make 进程仍需避免同时部署。
+- =switch= 自带构建步骤，日常部署直接执行 =make switch=，无需先执行 =make build=。
+- =switch= 在对应用户的登录环境执行，冲突文件使用 =BACKUP= 后缀备份，默认 =backup=。
+- =generations= 和 =packages= 查看当前执行用户的状态，不受 =CONFIG= 控制。
+- =lock= 补齐锁文件；=update= 更新全部输入，均不会激活配置。
+- 可通过 =HM=、=FLAKE= 和 =HM_ARGS= 覆盖命令、配置路径及额外参数。
+
 * 使用环境变量加载本机配置
 
 公共配置可以通过环境变量加载每台机器独立的 Home Manager 模块。这样机器相关配置不需要放在当前仓库中。
