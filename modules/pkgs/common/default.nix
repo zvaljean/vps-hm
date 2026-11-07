@@ -28,6 +28,14 @@
       eza
       fzf
       bat
-      ;
+
+      stylua
+      prettier
+      shfmt
+      alejandra
+      gnutar
+      tree-sitter
+      gcc
+    ;
   };
 }

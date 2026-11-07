@@ -6,7 +6,7 @@
   extra-tools.enable = true;
 
   sops.enable = false;
-  emacs.enable = true;
+  emacs.enable = false;
   tmux.enable = true;
   yt-dlp.enable = true;
   devenv.enable = false;

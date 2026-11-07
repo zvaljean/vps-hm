@@ -18,7 +18,7 @@
           fontconfig
           chezmoi
           gnumake
-          ;
+        ;
       }
       ++ [
         pkgs.nerd-fonts.jetbrains-mono
