@@ -28,7 +28,6 @@
       eza
       fzf
       bat
-
       stylua
       prettier
       shfmt
@@ -36,6 +35,6 @@
       gnutar
       tree-sitter
       gcc
-    ;
+      ;
   };
 }

@@ -30,7 +30,6 @@
     '';
 
     shellAliases = {
-
       mux = "tmuxinator";
       # cm = "chezmoi";
 

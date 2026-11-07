@@ -1,7 +1,6 @@
 {
   config,
   pkgs,
-  unstablePkgs,
   lib,
   ...
 }: let
@@ -15,9 +14,19 @@ in {
   options.tmux.enable = lib.mkEnableOption "tmux config trigger.";
 
   config = lib.mkIf config.tmux.enable {
-
     home.packages = builtins.attrValues {
-      tmuxinator = unstablePkgs.tmuxinator;
+      # 回移上游版本列表，允许稳定版 tmuxinator 识别 tmux 3.7b。
+      tmuxinator = pkgs.tmuxinator.overrideAttrs (old: {
+        postInstall =
+          (old.postInstall or "")
+          + ''
+            substituteInPlace \
+              "$GEM_HOME/gems/tmuxinator-${old.version}/lib/tmuxinator/tmux_version.rb" \
+              --replace-fail \
+              '"3.6a",' \
+              '"3.7b", "3.7a", 3.7, "3.6b", "3.6a",'
+          '';
+      });
       tmux = pkgs.tmux;
     };
 

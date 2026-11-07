@@ -2,7 +2,6 @@
   config,
   pkgs,
   lib,
-
   ...
 }: let
   vps-neovim = pkgs.fetchFromGitHub {
